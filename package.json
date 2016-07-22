@@ -1,0 +1,29 @@
+{
+  "scripts": {
+    "start": "webpack-dev-server --hot --inline --content-base static"
+  },
+  "dependencies": {
+    "p2": "^0.7.1",
+    "pixi.js": "^3.0.11"
+  },
+  "devDependencies": {
+    "autoprefixer": "^6.3.7",
+    "babel-core": "^6.11.4",
+    "babel-loader": "^6.2.4",
+    "babel-preset-es2015": "^6.9.0",
+    "brfs": "^1.4.3",
+    "bufferutil": "^1.2.1",
+    "copy-webpack-plugin": "^3.0.1",
+    "extract-text-webpack-plugin": "^1.0.1",
+    "file-loader": "^0.9.0",
+    "html-webpack-plugin": "^2.22.0",
+    "json-loader": "^0.5.4",
+    "rimraf": "^2.5.3",
+    "socket.io-client": "^1.4.8",
+    "transform-loader": "^0.2.3",
+    "utf-8-validate": "^1.2.1",
+    "webpack": "^1.13.1",
+    "webpack-dev-server": "^1.14.1",
+    "webpack-merge": "^0.14.0"
+  }
+}
