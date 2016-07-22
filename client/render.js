@@ -87,6 +87,25 @@ module.exports = function render (simulation, spritesToRemove, currUserId) {
       stage.addChild(sprite)
     }
   }
+  // Upsert bomb sprites
+  for (const id in simulation.bombs) {
+    const bomb = simulation.bombs[id]
+    const [x, y] = Array.from(bomb.body.interpolatedPosition)
+    if (state.sprites[id]) {
+      // sprite exists, so updated it
+      const sprite = state.sprites[id]
+      sprite.position.set(x, viewport.fixY(y))
+    } else {
+      // sprite does not exist, so create it
+      const sprite = new PIXI.Sprite.fromImage('./img/bomb.png')
+      sprite.anchor.set(0.5)
+      sprite.height = 18
+      sprite.width = 18
+      sprite.position.set(x, viewport.fixY(y))
+      state.sprites[id] = sprite
+      stage.addChild(sprite)
+    }
+  }
   // Clean up old sprites
   for (const id of spritesToRemove) {
     const sprite = state.sprites[id]

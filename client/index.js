@@ -117,6 +117,16 @@ function update (now) {
   ;[turnItem, thrustItem].filter(Boolean).forEach((item) => {
     state.simulation.enqueueInput(state.userId, item)
   })
+  // Shoot bomb
+  if (keysDown.bomb) {
+    // Spawn bomb in simulation
+    const body = state.simulation.shootBomb(state.userId)
+    // Tell server about bomb shot
+    /* socket.emit(':bombShoot', {
+     *   position: Array.from(body.position),
+     *   velocity: Array.from(body.velocity)
+     * })*/
+  }
   // Physics
   const deltaTime = lastTime ? (now - lastTime) / 1000 : 0
   state.simulation.step(deltaTime)
@@ -127,8 +137,23 @@ function update (now) {
   lastTime = now
 }
 
-
 requestAnimationFrame(update)
+
+
+// HANDLE BODY CONTACT
+
+
+// Note: 'impact' event didn't work here with bomb.collisionResponse=false.
+state.simulation.world.on('beginContact', ({bodyA, bodyB}) => {
+  // when bomb collides with wall, bodyA always seems to be the bomb,
+  // bodyB always seems to be the wall. can i depend on this?
+  if (bodyA.isWall && bodyB.isBomb) {
+    state.simulation.removeBomb(bodyB.id)
+    state.spritesToRemove.push(bodyB.id)
+  } else if (bodyA.isBomb && bodyB.isWall) {
+    throw new Error('Assumption failed: A=bomb B=wall')
+  }
+})
 
 
 // BROADCAST POSITION -> SERVER

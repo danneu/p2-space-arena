@@ -17,6 +17,7 @@ function Player (id, team, position, angle) {
       mass: 1,
       position: position || [100, 100]
     })
+    body.isPlayer = true
     body.addShape(new p2.Circle({ radius: 15 }))
     body.angle = angle || 0
     return body
