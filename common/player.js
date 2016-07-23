@@ -55,8 +55,8 @@ Player.prototype.toJson = function () {
     team: this.team,
     uname: this.uname,
     // TODO, send binary
-    position: Array.from(this.body.position),
-    angle: this.body.angle,
-    velocity: Array.from(this.body.velocity)
+    position: [this.body.position[0], this.body.position[1]],
+    velocity: [this.body.velocity[0], this.body.velocity[1]],
+    angle: this.body.angle
   }
 }
