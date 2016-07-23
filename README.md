@@ -81,7 +81,8 @@ from the server.
 - p2's (0, 0) origin is on the bottom-left and increases up and
   to the right. Pixi's origin is on the top-left and increases
   down and to the right. It's painful having to flip the `y`.
-- Ships can go out of bounds for some reason. I enclosed
+- [Giving each p2.Plane an id seemed to fix it...?!] 
+  Ships can go out of bounds for some reason. I enclosed
   the `p2.World` with a `p2.Panel` on each side which, in
   my early testing, seemed impossible to tunnel through.
   Maybe something changed during a rewrite I did today, but
