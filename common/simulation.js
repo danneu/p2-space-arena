@@ -41,7 +41,9 @@ function Simulation ({x, y}) {
   const bottom = makeWall(0, 0, 0)
   const right = makeWall(x, 0, Math.PI / 2)
   const left = makeWall(0, 0, (3 * Math.PI) / 2)
-  for (const body of [top, bottom, right, left]) {
+  // exposed for debug
+  this.walls = [top, bottom, left, right]
+  for (const body of [top, bottom, left, right]) {
     this.world.addBody(body)
   }
 }
@@ -158,6 +160,14 @@ Simulation.prototype.shootBomb = function (userId) {
 }
 
 
+////////////////////////////////////////////////////////////
+
+
+// On the client, no matter how far behind we are, we only want to
+// do one step, we don't want to catch up, like when tab becomes
+// active again.
+const maxSubSteps = 1
+
 Simulation.prototype.step = function (dt) {
   // Apply force for each user
   for (const id in this.players) {
@@ -197,10 +207,6 @@ Simulation.prototype.step = function (dt) {
     }
   }
   // Now we simulate a step with our new forces
-
-  // On the client, no matter how far behind we are, we only want to
-  // do one step, we don't want to 'catch them up'.
-  const maxSubSteps = 1
   this.world.step(1 / 60, dt, maxSubSteps)
 }
 

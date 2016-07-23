@@ -6,7 +6,7 @@ const io = require('socket.io-client')
 const Simulation = require('../common/simulation')
 const Player = require('../common/player')
 const Bomb = require('../common/bomb')
-const render = require('./render')
+const renderer = require('./renderer')
 
 
 // STATE
@@ -136,6 +136,9 @@ function handleInput (key) {
 
 
 // UPDATE LOOP
+
+
+const render = renderer.init({ x: 1400, y: 400 }, state.simulation.walls)
 
 
 let lastTime

@@ -1,6 +1,7 @@
 
 // 3rd
 const p2 = require('p2')
+const faker = require('faker')
 
 
 module.exports = Player
@@ -9,6 +10,8 @@ module.exports = Player
 function Player (id, team, position, angle) {
   if (!team) throw new Error('Must initialize player with a team')
   this.id = id
+  // TODO: Hook up uname
+  this.uname = faker.internet.userName().slice(0, 14)
   this.team = team
   this.lastBombAt = 0
   this.body = (function() {
@@ -33,7 +36,9 @@ function Player (id, team, position, angle) {
 
 
 Player.fromJson = function (data) {
-  return new Player(data.id, data.team, data.position, data.angle)
+  const player = new Player(data.id, data.team, data.position, data.angle)
+  player.uname = data.uname
+  return player
 }
 
 
@@ -44,6 +49,7 @@ Player.prototype.toJson = function () {
   return {
     id: this.id,
     team: this.team,
+    uname: this.uname,
     // TODO, send binary
     position: [this.body.position[0], this.body.position[1]],
     angle: this.body.angle,

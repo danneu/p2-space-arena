@@ -3,6 +3,7 @@
     "start": "webpack-dev-server --hot --inline --content-base static"
   },
   "dependencies": {
+    "faker": "^3.1.0",
     "p2": "^0.7.1",
     "pixi.js": "^3.0.11"
   },
