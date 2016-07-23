@@ -2,6 +2,8 @@
 // 3rd
 const p2 = require('p2')
 const faker = require('faker')
+// 1st
+const Material = require('./material')
 
 
 module.exports = Player
@@ -22,7 +24,9 @@ function Player (id, team, position, angle) {
       position: position || [100, 100]
     })
     body.isPlayer = true
-    body.addShape(new p2.Circle({ radius: 15 }))
+    const shape = new p2.Circle({ radius: 15 })
+    shape.material = Material.ship
+    body.addShape(shape)
     body.angle = angle || 0
     return body
   })()
@@ -51,8 +55,8 @@ Player.prototype.toJson = function () {
     team: this.team,
     uname: this.uname,
     // TODO, send binary
-    position: [this.body.position[0], this.body.position[1]],
+    position: Array.from(this.body.position),
     angle: this.body.angle,
-    velocity: [this.body.velocity[0], this.body.velocity[1]]
+    velocity: Array.from(this.body.velocity)
   }
 }

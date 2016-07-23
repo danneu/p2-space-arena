@@ -9,6 +9,7 @@ const _ = require('lodash')
 const Physics = require('./physics')
 const Player = require('./player')
 const Bomb = require('./bomb')
+const Material = require('./material')
 
 
 module.exports = Simulation
@@ -20,8 +21,11 @@ module.exports = Simulation
 // Returns a p2.Body
 function makeWall (id, x, y, angle) {
   // wtf, setting id on wall seems to fix tunnel issue???
+  // besides, thought it had to be a number
   const body = new p2.Body({ id, mass: 0, angle })
-  body.addShape(new p2.Plane())
+  const shape = new p2.Plane()
+  shape.material = Material.wall
+  body.addShape(shape)
   body.position = [x, y]
   body.isWall = true
   return body
@@ -47,6 +51,8 @@ function Simulation ({x, y}) {
   for (const body of [top, bottom, left, right]) {
     this.world.addBody(body)
   }
+  // MATERIALS
+  this.world.addContactMaterial(Material.wallVsShip)
 }
 
 
