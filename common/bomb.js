@@ -7,21 +7,25 @@ const p2 = require('p2')
 const vec2 = p2.vec2
 // 1st
 const Physics = require('./physics')
+const Uuid = require('./uuid')
 
 
 module.exports = Bomb
 
 
 function Bomb (id, userId, position, velocity) {
+  console.log('initializing bomb id=', id, 'userId=',userId)
+  assert(id)
   assert(Number.isInteger(userId))
   assert(position)
   assert(velocity)
   this.id = id
+  this.userId = userId
   this.body = (function() {
     const body = new p2.Body({
       id,
       mass: 1,
-      position: position
+      position
     })
     // does not produce contact forces
     body.collisionResponse = false
@@ -43,7 +47,7 @@ Bomb.fromJson = function (data) {
 
 
 Bomb.fromPlayer = function (player) {
-  const id = Math.random().toString()
+  const id = Uuid.generate()
   const position = Physics.nose(player.body)
   const velocity = vec2.create()
   vec2.rotate(velocity, vec2.fromValues(0, 300), -player.body.angle)

@@ -5,6 +5,7 @@ const io = require('socket.io-client')
 // 1st
 const Simulation = require('../common/simulation')
 const Player = require('../common/player')
+const Bomb = require('../common/bomb')
 const render = require('./render')
 
 
@@ -49,9 +50,40 @@ socket.on(':player_left', (userId) => {
 })
 
 
-socket.on(':snapshot', (data) => {
-  console.log('[recv :snapshot]')
-  applySnapshot(data)
+// Server is telling us that somebody else shot a bomb.
+// We never get this for our *own* bombs.
+//
+// When we get this, add it to our simulation
+socket.on(':bombShot', ({id, userId, position, velocity}) => {
+  const bomb = new Bomb(id, userId, position, velocity)
+  state.simulation.addBomb(bomb)
+})
+
+
+// Server is broadcasting a bomb->player collision
+// For now just remove the bomb from the sim.
+// Reminder: bomb and victim are just json data, not instances
+socket.on(':bombHit', ({bomb, victim}) => {
+  console.log('[recv :bombHit] bomb=', bomb, 'victim=', victim)
+  state.simulation.removeBomb(bomb.id)
+  state.spritesToRemove.push(bomb.id)
+})
+
+
+// Note: Since :player_left and :player_joined let the client
+// keep their state up to date, the client just has to merge in the snapshot
+// rather than check for simulation vs snapshot difference/orphans
+//
+// `items` is list of player json (Reminder: they aren't Player instances)
+socket.on(':snapshot', (playerItems) => {
+  for (const item of playerItems) {
+    // Ignore our own data
+    if (item.id === state.userId) continue
+    const player = state.simulation.getPlayer(item.id)
+    player.body.position = item.position
+    player.body.angle = item.angle
+    player.body.velocity = item.velocity
+  }
 })
 
 
@@ -120,12 +152,15 @@ function update (now) {
   // Shoot bomb
   if (keysDown.bomb) {
     // Spawn bomb in simulation
-    const body = state.simulation.shootBomb(state.userId)
-    // Tell server about bomb shot
-    /* socket.emit(':bombShoot', {
-     *   position: Array.from(body.position),
-     *   velocity: Array.from(body.velocity)
-     * })*/
+    const bomb = state.simulation.shootBomb(state.userId)
+    // Tell server about bomb shot (if there was one)
+    if (bomb) {
+      socket.emit(':bombShot', {
+        id: bomb.id, // server uses client's id
+        position: Array.from(bomb.body.position),
+        velocity: Array.from(bomb.body.velocity)
+      })
+    }
   }
   // Physics
   const deltaTime = lastTime ? (now - lastTime) / 1000 : 0

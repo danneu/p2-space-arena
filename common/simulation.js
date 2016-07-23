@@ -47,10 +47,16 @@ function Simulation ({x, y}) {
 }
 
 
+// This method should be used to init a Player instance since
+// it assigns the team and sets the position based on simulation state.
+//
 // Returns Player
 Simulation.prototype.createPlayer = function (id) {
   assert(Number.isInteger(id))
-  return new Player(id, this.getNextTeamAssignment())
+  // ship x coord determined by how many players are in the game
+  // to avoid the tired case of overlapping in development
+  const position = [100 * (this.playerCount() + 1), 100]
+  return new Player(id, this.getNextTeamAssignment(), position)
 }
 
 
@@ -63,8 +69,21 @@ Simulation.prototype.addPlayer = function (player) {
 
 
 Simulation.prototype.getPlayer = function (id) {
-  assert(Number.isInteger(id))
+  assert(id)
   return this.players[id]
+}
+
+
+Simulation.prototype.getBomb = function (id) {
+  assert(id)
+  return this.bombs[id]
+}
+
+
+Simulation.prototype.addBomb = function (bomb) {
+  assert(bomb)
+  this.world.addBody(bomb.body)
+  this.bombs[bomb.id] = bomb
 }
 
 
@@ -123,13 +142,18 @@ Simulation.prototype.enqueueInput = function (userId, [kind, key]) {
 
 // Creates bomb for player and adds it to simulation
 //
-// Returns Bomb
+// Returns Bomb if the player was able to shoot. null means
+// they had insufficient cooldown.
 Simulation.prototype.shootBomb = function (userId) {
   assert(Number.isInteger(userId))
   const player = this.getPlayer(userId)
+  // check cooldown
+  if (Date.now() - player.lastBombAt < 1000) return
   const bomb = Bomb.fromPlayer(player)
   this.bombs[bomb.id] = bomb
   this.world.addBody(bomb.body)
+  // update cooldown
+  player.lastBombAt = Date.now()
   return bomb
 }
 
@@ -176,7 +200,20 @@ Simulation.prototype.step = function (dt) {
 
   // On the client, no matter how far behind we are, we only want to
   // do one step, we don't want to 'catch them up'.
-  //const maxSubSteps = 1
-  const maxSubSteps = 10
+  const maxSubSteps = 1
   this.world.step(1 / 60, dt, maxSubSteps)
+}
+
+
+
+// A snapshot is the list of players so that each client can
+// draw the other players on their screen.
+//
+// TODO: Delta compression
+Simulation.prototype.toSnapshot = function () {
+  const snapshot = []
+  for (const id in this.players) {
+    snapshot.push(this.players[id].toJson())
+  }
+  return snapshot
 }

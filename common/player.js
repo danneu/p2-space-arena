@@ -10,6 +10,7 @@ function Player (id, team, position, angle) {
   if (!team) throw new Error('Must initialize player with a team')
   this.id = id
   this.team = team
+  this.lastBombAt = 0
   this.body = (function() {
     const body = new p2.Body({
       id,
