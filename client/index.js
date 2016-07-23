@@ -35,6 +35,8 @@ const socket = window.location.hostname === 'localhost'
 socket.on(':user_id', (userId) => {
   console.log('[recv :user_id]', userId)
   state.userId = userId
+  // Start update loop when user is ready
+  requestAnimationFrame(update)
 })
 
 
@@ -177,7 +179,6 @@ function update (now) {
   lastTime = now
 }
 
-requestAnimationFrame(update)
 
 
 // HANDLE BODY CONTACT
