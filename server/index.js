@@ -160,6 +160,11 @@ state.simulation.world.on('beginContact', ({bodyA, bodyB}) => {
   }
   // We can load the shooter now
   shooter = state.simulation.getPlayer(bomb.userId)
+  // HACK: I need to figure out why the player cannot be found.
+  // It's causing a runtime error. For now I'll hack in a short-circuit.
+  if (!shooter) {
+    return
+  }
   // Ignore friendly-fire
   if (victim.team === shooter.team) {
     return
