@@ -14,7 +14,6 @@ module.exports = Bomb
 
 
 function Bomb (id, userId, position, velocity) {
-  console.log('initializing bomb id=', id, 'userId=',userId)
   assert(id)
   assert(Number.isInteger(userId))
   assert(position)
@@ -29,7 +28,6 @@ function Bomb (id, userId, position, velocity) {
     })
     // does not produce contact forces
     body.collisionResponse = false
-    //body.collisionResponse = true
     body.addShape(new p2.Circle({ radius: 9 }))
     body.velocity = velocity
     body.isBomb = true

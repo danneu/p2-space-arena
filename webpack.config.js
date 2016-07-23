@@ -47,6 +47,10 @@ var common = {
   ]
 }
 
+
+////////////////////////////////////////////////////////////
+
+
 var development = {
   entry: [
     'webpack-dev-server/client?http://localhost:8080',
@@ -58,7 +62,39 @@ var development = {
   }
 }
 
-if (TARGET_ENV === 'development') {
+
+////////////////////////////////////////////////////////////
+
+
+var production = {
+  entry: [
+    path.join(__dirname, 'static/index.js')
+  ],
+  plugins: [
+    new CopyWebpackPlugin([
+      { from: 'static/img/', to: 'img/' },
+      { from: 'static/favicon.ico' }
+    ]),
+    new webpack.optimize.OccurenceOrderPlugin(),
+    // extract CSS into a separate file
+    new ExtractTextPlugin( './[hash].css', { allChunks: true } ),
+    // minify & mangle JS/CSS
+    new webpack.optimize.UglifyJsPlugin({
+      minimize: true,
+      compressor: { warnings: false }
+      // mangle:  true
+    })
+  ]
+}
+
+
+////////////////////////////////////////////////////////////
+
+
+if (TARGET_ENV === 'production') {
+  console.log('Bundling for production...')
+  module.exports = merge(common, production)
+} else {
   console.log('Starting dev server...')
   module.exports = merge(common, development)
 }

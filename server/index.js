@@ -1,15 +1,19 @@
 
 
+// Core
+const http = require('http')
 // 3rd
 const Server = require('socket.io')
 const performance = { now: require('performance-now') }
+const nodeStatic = require('node-static')
 // 1st
-const Simulation = require('../../common/simulation')
-const Player = require('../../common/player')
-const Bomb = require('../../common/bomb')
+const Simulation = require('../common/simulation')
+const Player = require('../common/player')
+const Bomb = require('../common/bomb')
 
 
 // STATE
+
 
 const state = {
   simulation: new Simulation({ x: 1400, y: 400 }),
@@ -26,13 +30,25 @@ const uid = (() => {
 })()
 
 
-// SERVER
+// HTTP SERVER
 
 
-const server = new Server()
+const app = (function () {
+  const dist = new nodeStatic.Server('dist')
+  return http.createServer((req, res) => {
+    req.addListener('end', () => dist.serve(req, res)).resume()
+  })
+})()
+
+
+// SOCKET SERVER
+
+
+const server = Server(app)
 
 server.on('connection', (socket) => {
   console.log('[connection] a client joined')
+  socket.on('disconnect', () => onDisconnect(socket))
   // Create player
   const userId = uid()
   const player = state.simulation.createPlayer(userId)
@@ -48,10 +64,9 @@ server.on('connection', (socket) => {
   state.simulation.addPlayer(player)
   // Tell newcomer their id
   socket.emit(':user_id', userId)
-  // Hook up remaining events
+  // Hook up game events
   socket.on(':position', (packet) => onPosition(socket, packet))
   socket.on(':bombShot', (bombData) => onBombShot(socket, bombData))
-  socket.on('disconnect', () => onDisconnect(socket))
 })
 
 
@@ -133,6 +148,11 @@ state.simulation.world.on('beginContact', ({bodyA, bodyB}) => {
     // No collision, so bail
     return
   }
+  // HACK: I need to figure out why the player cannot be found.
+  // It's causing a runtime error. For now I'll hack in a short-circuit.
+  if (!victim) {
+    return
+  }
   // Ignore our own bombs
   if (bomb.userId === victim.id) {
     return
@@ -172,4 +192,4 @@ function broadcastSnapshot () {
 ////////////////////////////////////////////////////////////
 
 
-server.listen(3000)
+app.listen(process.env.PORT || 3000)

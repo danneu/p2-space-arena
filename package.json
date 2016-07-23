@@ -1,11 +1,15 @@
 {
   "scripts": {
-    "start": "webpack-dev-server --hot --inline --content-base static"
+    "listen": "rimraf dist && webpack && node server",
+    "start": "webpack-dev-server --hot --inline --content-base static",
+    "build": "rimraf dist && webpack"
   },
   "dependencies": {
     "faker": "^3.1.0",
     "p2": "^0.7.1",
-    "pixi.js": "^3.0.11"
+    "performance-now": "^0.2.0",
+    "pixi.js": "^3.0.11",
+    "socket.io": "^1.4.8"
   },
   "devDependencies": {
     "autoprefixer": "^6.3.7",
@@ -19,6 +23,7 @@
     "file-loader": "^0.9.0",
     "html-webpack-plugin": "^2.22.0",
     "json-loader": "^0.5.4",
+    "node-static": "^0.7.7",
     "rimraf": "^2.5.3",
     "socket.io-client": "^1.4.8",
     "transform-loader": "^0.2.3",
@@ -26,5 +31,8 @@
     "webpack": "^1.13.1",
     "webpack-dev-server": "^1.14.1",
     "webpack-merge": "^0.14.0"
+  },
+  "engines": {
+    "node": "6.x"
   }
 }

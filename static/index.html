@@ -5,7 +5,63 @@
      background-color: black;
      overflow: hidden;
    }
+   #overlay {
+     position: absolute;
+     top: 20px;
+     left: 50px;
+     color: white;
+     font-size: 16px;
+     font-family: Verdana;
+   }
+   #overlay ul {
+     list-style: none;
+     padding-left: 0;
+   }
+   #overlay a {
+     color: #2ecc71;
+   }
+   .muted {
+     color: #95a5a6;
+   }
+   kbd {
+    -moz-border-radius:3px;
+    -moz-box-shadow:0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+    -webkit-border-radius:3px;
+    -webkit-box-shadow:0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+    background-color:#f7f7f7;
+    border:1px solid #ccc;
+    border-radius:3px;
+    box-shadow:0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+    color:#333;
+    display:inline-block;
+    font-family:Arial,Helvetica,sans-serif;
+    font-size:11px;
+    line-height:1.4;
+    margin:0 .1em;
+    padding:.1em .6em;
+    text-shadow:0 1px 0 #fff;
+   }
   </style>
 </head>
 <body>
+  <div id="overlay">
+    <ul>
+      <li class="muted">
+        Source:
+        <a href="https://github.com/danneu/p2-space-arena"
+           target="_blank"
+        >
+          danneu/p2-space-arena
+        </a>
+      </li>
+      <li>
+        Move with
+        <kbd>&larr;</kbd>
+        <kbd>&uarr;</kbd>
+        <kbd>&darr;</kbd>
+        <kbd>&rarr;</kbd>
+      </li>
+      <li>Shoot with <kbd>F</kbd></li>
+    </ul>
+  </div>
 </body>
