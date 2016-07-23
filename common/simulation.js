@@ -164,53 +164,39 @@ Simulation.prototype.shootBomb = function (userId) {
 ////////////////////////////////////////////////////////////
 
 
+// re: maxSubSteps = 1
 // On the client, no matter how far behind we are, we only want to
 // do one step, we don't want to catch up, like when tab becomes
 // active again.
-const maxSubSteps = 1
-
-Simulation.prototype.step = function (dt) {
-  // Apply force for each user
-  for (const id in this.players) {
-    const player = this.players[id]
-    // If player is still holding a key, enqueue the input for this frame
-    if (player.keysDown.up) {
-      player.inputs.push(['keydown', 'up'])
-    } else if (player.keysDown.down) {
-      player.inputs.push(['keydown', 'down'])
-    }
-    if (player.keysDown.left) {
-      player.inputs.push(['keydown', 'left'])
-    } else if (player.keysDown.right) {
-      player.inputs.push(['keydown', 'right'])
-    }
-    if (player.keysDown.bomb) {
-      player.inputs.push(['keydown', 'bomb'])
-    }
-    // Convert each input into force
-    for (const [kind, key] of player.inputs) {
-      if (kind === 'keydown') {
-        if (key === 'up') {
-          Physics.thrust(6000 * dt, player.body)
-        } else if (key === 'down') {
-          Physics.thrust(-6000 * dt, player.body)
-        }
-        if (key === 'left') {
-          Physics.rotateLeft(180 * dt, player.body)
-        } else if (key === 'right') {
-          Physics.rotateRight(180 * dt, player.body)
-        }
-      } else if (kind === 'keyup' && (key === 'left' || key == 'right')) {
-        Physics.zeroRotation(player.body)
-      }
-      // Clear inputs for next frame
-      player.inputs = []
-    }
-  }
+Simulation.prototype.step = function (deltaTime, maxSubSteps = 1) {
   // Now we simulate a step with our new forces
-  this.world.step(1 / 60, dt, maxSubSteps)
+  //this.world.step(1 / 60, deltaTime, maxSubSteps)
+  this.world.step(1 / 60)
 }
 
+
+Simulation.prototype.enqueueInputs = function (userId, inputs) {
+  const player = this.players[userId]
+  // Update player's keysDown map and enqueue new inputs
+  for (const [kind, key] of inputs) {
+    player.inputs.push([kind, key])
+    player.keysDown[key] = kind === 'keydown'
+  }
+  // If player is still holding a key, enqueue the input for this frame
+  if (player.keysDown.up) {
+    player.inputs.push(['keydown', 'up'])
+  } else if (player.keysDown.down) {
+    player.inputs.push(['keydown', 'down'])
+  }
+  if (player.keysDown.left) {
+    player.inputs.push(['keydown', 'left'])
+  } else if (player.keysDown.right) {
+    player.inputs.push(['keydown', 'right'])
+  }
+  if (player.keysDown.bomb) {
+    player.inputs.push(['keydown', 'bomb'])
+  }
+}
 
 
 // A snapshot is the list of players so that each client can

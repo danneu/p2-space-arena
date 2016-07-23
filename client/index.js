@@ -6,6 +6,7 @@ const io = require('socket.io-client')
 const Simulation = require('../common/simulation')
 const Player = require('../common/player')
 const Bomb = require('../common/bomb')
+const Physics = require('../common/physics')
 const renderer = require('./renderer')
 
 
@@ -153,9 +154,10 @@ function update (now) {
   const turnItem = handleInput('left') || handleInput('right')
   const thrustItem = handleInput('up') || handleInput('down')
   // Apply local input
-  ;[turnItem, thrustItem].filter(Boolean).forEach((item) => {
-    state.simulation.enqueueInput(state.userId, item)
-  })
+  state.simulation.enqueueInputs(
+    state.userId,
+    [turnItem, thrustItem].filter(Boolean)
+  )
   // Shoot bomb
   if (keysDown.bomb) {
     // Spawn bomb in simulation
@@ -170,8 +172,8 @@ function update (now) {
     }
   }
   // Physics
-  const deltaTime = lastTime ? (now - lastTime) / 1000 : 0
-  state.simulation.step(deltaTime)
+  //const deltaTime = lastTime ? (now - lastTime) / 1000 : 0
+  state.simulation.step()
   // Render
   render(state.simulation, state.spritesToRemove, state.userId)
   // Prepare for next frame
@@ -179,6 +181,34 @@ function update (now) {
   lastTime = now
 }
 
+
+
+// APPLY FORCES TO CURR USER
+
+
+state.simulation.world.on('postStep', () => {
+  const player = state.simulation.getPlayer(state.userId)
+  if (!player) { console.log('wtf'); return } // wtf?
+  // Convert each input into force
+  for (const [kind, key] of player.inputs) {
+    if (kind === 'keydown') {
+      if (key === 'up') {
+        Physics.thrust(200, player.body)
+      } else if (key === 'down') {
+        Physics.thrust(-200, player.body)
+      }
+      if (key === 'left') {
+        Physics.rotateLeft(3, player.body)
+      } else if (key === 'right') {
+        Physics.rotateRight(3, player.body)
+      }
+    } else if (kind === 'keyup' && (key === 'left' || key == 'right')) {
+      Physics.zeroRotation(player.body)
+    }
+  }
+  // Clear inputs for next frame
+  player.inputs = []
+})
 
 
 // HANDLE BODY CONTACT
