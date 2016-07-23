@@ -137,12 +137,12 @@ exports.init = function ({ x: mapX, y: mapY }, walls) {
         sprite.rotation = player.body.interpolatedAngle
         // if this player is us, offset stage so that we are centered
         if (player.id === currUserId) {
-          stage.position.x = viewport.x/2 - player.body.position[0]
-          stage.position.y = viewport.y/2 - viewport.fixY(player.body.position[1])
+          stage.position.x = viewport.x/2 - x
+          stage.position.y = viewport.y/2 - viewport.fixY(y)
           // also, check if we are out of bounds to display wallWarning
-          if (player.body.position[0] < 0 || player.body.position[0] > mapX || player.body.position[1] < 0 || player.body.position[1] > mapY) {
-            wallWarning.position.x = player.body.position[0]
-            wallWarning.position.y = viewport.fixY(player.body.position[1] + 50)
+          if (x < 0 || x > mapX || y < 0 || y > mapY) {
+            wallWarning.position.x = x
+            wallWarning.position.y = viewport.fixY(y + 50)
             wallWarning.visible = true
           } else {
             wallWarning.visible = false
@@ -169,11 +169,8 @@ exports.init = function ({ x: mapX, y: mapY }, walls) {
         sprite.anchor.set(0.5)
         sprite.height = 30
         sprite.width = 30
-        //sprite.position.set(x, viewport.fixY(y))
         container.position.set(x, viewport.fixY(y))
         sprite.rotation = player.body.interpolatedAngle
-        //stage.addChild(sprite)
-        //text.rotation = sprite.rotation
         text.position.set(sprite.x + 10, sprite.y + 10)
         container.addChild(sprite)
         container.addChild(text)

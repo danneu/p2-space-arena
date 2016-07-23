@@ -18,8 +18,9 @@ module.exports = Simulation
 
 
 // Returns a p2.Body
-function makeWall (x, y, angle) {
-  const body = new p2.Body({ mass: 0, angle })
+function makeWall (id, x, y, angle) {
+  // wtf, setting id on wall seems to fix tunnel issue???
+  const body = new p2.Body({ id, mass: 0, angle })
   body.addShape(new p2.Plane())
   body.position = [x, y]
   body.isWall = true
@@ -37,10 +38,10 @@ function Simulation ({x, y}) {
   this.players = Object.create(null) // mapping of userId -> Player
   this.bombs = Object.create(null) // mapping of userId -> Bomb
   // WALLS
-  const top = makeWall(0, y, Math.PI)
-  const bottom = makeWall(0, 0, 0)
-  const right = makeWall(x, 0, Math.PI / 2)
-  const left = makeWall(0, 0, (3 * Math.PI) / 2)
+  const top = makeWall('top', 0, y, Math.PI)
+  const bottom = makeWall('bottom', x, 0, 0)
+  const right = makeWall('right', x, y, Math.PI / 2)
+  const left = makeWall('left', 0, 0, (3 * Math.PI) / 2)
   // exposed for debug
   this.walls = [top, bottom, left, right]
   for (const body of [top, bottom, left, right]) {
