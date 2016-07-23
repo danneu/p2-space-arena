@@ -197,6 +197,25 @@ state.simulation.world.on('beginContact', ({bodyA, bodyB}) => {
 })
 
 
+// TRACK WHETHER PLAYER IS TOUCHING WALL
+//
+// If player it touching a wall, slow them down
+
+
+
+state.simulation.world.on('beginContact', ({bodyA, bodyB}) => {
+  if (bodyB.isPlayer && bodyA.isWall) {
+    bodyB.damping = 0.75
+  }
+})
+
+state.simulation.world.on('endContact', ({bodyA, bodyB}) => {
+  if (bodyB.isPlayer && bodyA.isWall) {
+    bodyB.damping = 0.1 // back to p2 default
+  }
+})
+
+
 // BROADCAST POSITION -> SERVER
 
 
