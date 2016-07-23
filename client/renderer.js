@@ -128,13 +128,13 @@ exports.init = function ({ x: mapX, y: mapY }, walls) {
     // Update player sprites
     for (const id in simulation.players) {
       const player = simulation.players[id]
-      const [x, y] = Array.from(player.body.interpolatedPosition)
+      const [x, y] = Array.from(player.body.position)
       if (state.sprites[id]) {
         // player sprite exists, so update it
         const container = state.sprites[id]
         const sprite = container.getChildAt(0)
         container.position.set(x, viewport.fixY(y))
-        sprite.rotation = player.body.interpolatedAngle
+        sprite.rotation = player.body.angle
         // if this player is us, offset stage so that we are centered
         if (player.id === currUserId) {
           stage.position.x = viewport.x/2 - x
@@ -170,7 +170,7 @@ exports.init = function ({ x: mapX, y: mapY }, walls) {
         sprite.height = 30
         sprite.width = 30
         container.position.set(x, viewport.fixY(y))
-        sprite.rotation = player.body.interpolatedAngle
+        sprite.rotation = player.body.angle
         text.position.set(sprite.x + 10, sprite.y + 10)
         container.addChild(sprite)
         container.addChild(text)
@@ -181,7 +181,7 @@ exports.init = function ({ x: mapX, y: mapY }, walls) {
     // Upsert bomb sprites
     for (const id in simulation.bombs) {
       const bomb = simulation.bombs[id]
-      const [x, y] = Array.from(bomb.body.interpolatedPosition)
+      const [x, y] = Array.from(bomb.body.position)
       if (state.sprites[id]) {
         // sprite exists, so updated it
         const sprite = state.sprites[id]
