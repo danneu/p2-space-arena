@@ -65,35 +65,35 @@ exports.init = function ({ x: mapX, y: mapY }, walls) {
   // p2.Plane walls
 
 
-  const [topWall, botWall, left, right] = walls
+  const [top, bot, left, right] = walls
   let gfx
 
   gfx = new PIXI.Graphics() // top, red
   gfx.beginFill(0x000000)
   gfx.lineStyle(5, 0xFF0000)
-  gfx.moveTo(-viewport.x, viewport.fixY(topWall.position[1]))
-  gfx.lineTo(viewport.x, viewport.fixY(topWall.position[1]))
+  gfx.moveTo(-viewport.x * 2, viewport.fixY(top.position[1]))
+  gfx.lineTo(viewport.x * 2, viewport.fixY(top.position[1]))
   stage.addChild(gfx)
 
   gfx = new PIXI.Graphics() // bottom, orange
   gfx.beginFill(0x000000)
   gfx.lineStyle(5, 0xFFA500)
-  gfx.moveTo(-viewport.x, viewport.fixY(botWall.position[1]))
-  gfx.lineTo(viewport.x, viewport.fixY(botWall.position[1]))
+  gfx.moveTo(-viewport.x * 2, viewport.fixY(bot.position[1]))
+  gfx.lineTo(viewport.x * 2, viewport.fixY(bot.position[1]))
   stage.addChild(gfx)
 
   gfx = new PIXI.Graphics() // left, blue
   gfx.beginFill(0x000000)
   gfx.lineStyle(5, 0x0000FF)
-  gfx.moveTo(left.position[0], -viewport.y)
-  gfx.lineTo(left.position[0], viewport.y)
+  gfx.moveTo(left.position[0], -viewport.y * 2)
+  gfx.lineTo(left.position[0], viewport.y * 2)
   stage.addChild(gfx)
 
   gfx = new PIXI.Graphics() // right, green
   gfx.beginFill(0x000000)
   gfx.lineStyle(5, 0x00FF00)
-  gfx.moveTo(right.position[0], -viewport.y)
-  gfx.lineTo(right.position[0], viewport.y)
+  gfx.moveTo(right.position[0], -viewport.y * 2)
+  gfx.lineTo(right.position[0], viewport.y * 2)
   stage.addChild(gfx)
 
 
