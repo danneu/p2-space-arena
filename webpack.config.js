@@ -4,8 +4,9 @@ var webpack = require('webpack')
 var merge = require('webpack-merge')
 var HtmlWebpackPlugin = require('html-webpack-plugin')
 var autoprefixer = require('autoprefixer')
-var ExtractTextPlugin = require('extract-text-webpack-plugin');
-var CopyWebpackPlugin = require('copy-webpack-plugin');
+var ExtractTextPlugin = require('extract-text-webpack-plugin')
+var CopyWebpackPlugin = require('copy-webpack-plugin')
+var CompressionPlugin = require("compression-webpack-plugin")
 
 var TARGET_ENV
 if (process.env.NODE_ENV === 'production') {
@@ -92,6 +93,12 @@ var production = {
       minimize: true,
       compressor: { warnings: false }
       // mangle:  true
+    }),
+    // node-static is configured to look for a [path].gz of js/css files
+    new CompressionPlugin({
+      asset: '[path].gz',
+      algorithm: 'gzip',
+      test: /\.(js|css)$/
     })
   ]
 }

@@ -34,7 +34,8 @@ const uid = (() => {
 
 
 const app = (function () {
-  const dist = new nodeStatic.Server('dist')
+  // gzip regexp matches the response's content-type
+  const dist = new nodeStatic.Server('dist', { gzip: /\/(javascript|css)/ })
   return http.createServer((req, res) => {
     req.addListener('end', () => dist.serve(req, res)).resume()
   })
