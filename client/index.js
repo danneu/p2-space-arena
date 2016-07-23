@@ -24,7 +24,9 @@ const state = {
 // SOCKET
 
 
-const socket = io('ws://localhost:3000')
+const socket = window.location.hostname === 'localhost'
+  ? io('ws://localhost:3000')
+  : io('ws://p2-space-arena.herokuapp.com')
 
 
 // socket.on('open', ...)

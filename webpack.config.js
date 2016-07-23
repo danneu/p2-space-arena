@@ -7,9 +7,14 @@ var autoprefixer = require('autoprefixer')
 var ExtractTextPlugin = require('extract-text-webpack-plugin');
 var CopyWebpackPlugin = require('copy-webpack-plugin');
 
-var TARGET_ENV = process.env.npm_lifecycle_event === 'build'
-  ? 'production'
-  : 'development'
+var TARGET_ENV
+if (process.env.NODE_ENV === 'production') {
+  TARGET_ENV = 'production'
+} else {
+  TARGET_ENV = process.env.npm_lifecycle_event === 'build'
+    ? 'production'
+    : 'development'
+}
 
 var common = {
   output: {

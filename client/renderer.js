@@ -32,8 +32,10 @@ exports.init = function ({ x: mapX, y: mapY }, walls) {
   }
 
   window.onresize = function () {
+    console.log('onresize:before', pixiRenderer.width)
     pixiRenderer.width = viewport.x = document.documentElement.clientWidth
     pixiRenderer.height = viewport.y = document.documentElement.clientHeight
+    console.log('onresize:after', pixiRenderer.width)
   }
 
 
