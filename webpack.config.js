@@ -29,7 +29,11 @@ var common = {
     loaders: [
       { test: /\.json$/, loader: 'json' },
       { test: /\.js$/,
-        exclude: /node_modules/,
+        include: [
+          path.resolve(__dirname, 'common'),
+          path.resolve(__dirname, 'client'),
+          path.resolve(__dirname, 'static')
+        ],
         loader: 'babel',
         query: {
           presets: ['es2015']
