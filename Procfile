@@ -1,1 +1,1 @@
-web: npm run listen
+web: node server

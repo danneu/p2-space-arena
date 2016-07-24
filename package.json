@@ -1,6 +1,5 @@
 {
   "scripts": {
-    "listen": "rimraf dist && webpack && node server",
     "start": "webpack-dev-server --hot --inline --content-base static",
     "build": "rimraf dist && webpack"
   },
