@@ -9,4 +9,5 @@ exports.WALL = Math.pow(2, 1)
 
 exports.BOMB = Math.pow(2, 2)
 
-exports.ALL = exports.PLAYER | exports.WALL | exports.BOMB
+// A group that collides with everything
+exports.ALL = -1

@@ -18,7 +18,11 @@ const state = {
   simulation: new Simulation({ x: 1400, y: 400 }),
   // Pass into `render` when we need to remove a sprite
   // Remember to reset it after render.
-  spritesToRemove: []
+  spritesToRemove: [],
+  // list of [bomb] sent to render,
+  // should be cleared after render since they're
+  // in the renderers hands now
+  detonatedBombs: []
 }
 
 
@@ -69,8 +73,10 @@ socket.on(':bombShot', ({id, userId, position, velocity}) => {
 // Server is broadcasting a bomb->player collision
 // For now just remove the bomb from the sim.
 // Reminder: bomb and victim are just json data, not instances
-socket.on(':bombHit', ({bomb, victim}) => {
-  console.log('[recv :bombHit] bomb=', bomb, 'victim=', victim)
+socket.on(':bombHit', ({bomb: bombData, victim}) => {
+  console.log('[recv :bombHit] bomb=', bombData, 'victim=', victim)
+  const bomb = state.simulation.getBomb(bombData.id)
+  state.detonatedBombs.push(bomb)
   state.simulation.removeBomb(bomb.id)
   state.spritesToRemove.push(bomb.id)
 })
@@ -188,7 +194,8 @@ function update () {
 
 function renderLoop () {
   requestAnimationFrame(renderLoop)
-  render(state.simulation, state.spritesToRemove, state.userId)
+  render(state.simulation, state.userId, state.spritesToRemove, state.detonatedBombs)
+  state.detonatedBombs = []
   state.spritesToRemove = []
 }
 
@@ -229,6 +236,7 @@ state.simulation.world.on('beginContact', ({bodyA, bodyB}) => {
   // when bomb collides with wall, bodyA always seems to be the bomb,
   // bodyB always seems to be the wall. can i depend on this?
   if (bodyA.isWall && bodyB.isBomb) {
+    state.detonatedBombs.push(state.simulation.getBomb(bodyB.id))
     state.simulation.removeBomb(bodyB.id)
     state.spritesToRemove.push(bodyB.id)
   } else if (bodyA.isBomb && bodyB.isWall) {
