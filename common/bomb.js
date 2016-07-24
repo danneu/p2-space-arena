@@ -28,6 +28,8 @@ function Bomb (id, userId, position, velocity) {
       mass: 1,
       position
     })
+    // bombs have no air resistance
+    body.damping = 0
     // does not produce contact forces
     body.collisionResponse = false
     const shape = new p2.Circle({ radius: 9 })
