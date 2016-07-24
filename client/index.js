@@ -101,7 +101,7 @@ socket.on('disconnect', () => {
 // KEYS
 
 
-const keysDown = {
+let keysDown = {
   up: false, down: false, left: false, right: false, bomb: false
 }
 window.onkeydown = function (e) {
@@ -282,8 +282,9 @@ state.simulation.world.on('endContact', ({bodyA, bodyB}) => {
   document.addEventListener('visibilitychange', () => {
     isVisible = !isVisible
     console.log('*************************** isVisible', isVisible)
-    if (isVisible) {
-      //debugger
+    // Clear keys pressed when user tabs out
+    if (state.userId && !isVisible) {
+      keysDown = { up: false, down: false, left: false, right: false, bomb: false }
     }
   })
 })()
