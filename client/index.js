@@ -73,8 +73,8 @@ socket.on(':bombShot', ({id, userId, position, velocity}) => {
 // Server is broadcasting a bomb->player collision
 // For now just remove the bomb from the sim.
 // Reminder: bomb and victim are just json data, not instances
-socket.on(':bombHit', ({bomb: bombData, victim}) => {
-  console.log('[recv :bombHit] bomb=', bombData, 'victim=', victim)
+socket.on(':bombHit', ({bomb, victim}) => {
+  console.log('[recv :bombHit] bomb=', bomb, 'victim=', victim)
   state.detonatedBombs.push([bomb.id, ...bomb.position])
   state.simulation.removeBomb(bomb.id)
   state.spritesToRemove.push(bomb.id)
