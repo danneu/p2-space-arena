@@ -2,6 +2,7 @@
 
 // 3rd
 const io = require('socket.io-client')
+const vec2 = require('p2').vec2
 // 1st
 const Simulation = require('../common/simulation')
 const Player = require('../common/player')
@@ -203,11 +204,14 @@ function renderLoop () {
 
 ;(function () {
   const nodes = {
-    angle: document.querySelector('#player-angle')
+    angle: document.querySelector('#player-angle'),
+    speed: document.querySelector('#player-speed')
   }
   state.simulation.world.on('postStep', () => {
     if (!state.userId) return
-    nodes.angle.innerHTML = Math.floor(state.simulation.getPlayer(state.userId).deg)
+    const player = state.simulation.getPlayer(state.userId)
+    nodes.angle.innerHTML = Math.floor(player.deg)
+    nodes.speed.innerHTML = vec2.length(player.body.velocity).toFixed(2)
   })
 })()
 
