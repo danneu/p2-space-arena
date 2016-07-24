@@ -4,6 +4,7 @@
 const io = require('socket.io-client')
 const vec2 = require('p2').vec2
 // 1st
+const util = require('../common/util')
 const Simulation = require('../common/simulation')
 const Player = require('../common/player')
 const Bomb = require('../common/bomb')
@@ -205,12 +206,14 @@ function renderLoop () {
 ;(function () {
   const nodes = {
     angle: document.querySelector('#player-angle'),
+    bodyAngle: document.querySelector('#body-angle'),
     speed: document.querySelector('#player-speed')
   }
   state.simulation.world.on('postStep', () => {
     if (!state.userId) return
     const player = state.simulation.getPlayer(state.userId)
     nodes.angle.innerHTML = Math.floor(player.deg)
+    nodes.bodyAngle.innerHTML = util.rad2deg(util.normalizeRad(player.body.angle)).toFixed(2)
     nodes.speed.innerHTML = vec2.length(player.body.velocity).toFixed(2)
   })
 })()

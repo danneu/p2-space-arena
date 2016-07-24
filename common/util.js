@@ -35,3 +35,13 @@ exports.clampDeg = function (deg) {
 exports.clampRad = function (rad) {
   return exports.deg2rad(exports.clampDeg(exports.rad2deg(rad)))
 }
+
+
+// cheaper mod
+exports.normalizeRad = function (rad) {
+  rad = rad % (Math.PI * 2)
+  if (rad < 0){
+    rad += (Math.PI * 2)
+  }
+  return rad
+}
