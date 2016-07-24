@@ -38,7 +38,11 @@ function makeWall (id, x, y, angle) {
 function Simulation ({x, y}) {
   assert(Number.isInteger(x))
   assert(Number.isInteger(y))
-  this.world = new p2.World({ gravity: [0, 0] })
+  this.world = (function () {
+    const world = new p2.World()
+    world.applyGravity = false
+    return world
+  })()
   this.players = Object.create(null) // mapping of userId -> Player
   this.bombs = Object.create(null) // mapping of userId -> Bomb
   // WALLS
