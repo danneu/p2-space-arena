@@ -25,17 +25,23 @@ exports.init = function ({ x: mapX, y: mapY }, walls) {
 
 
   const viewport = {
-    x: document.documentElement.clientWidth,
-    y: document.documentElement.clientHeight,
+    x: null,
+    y: null,
     // Converts p2 y to pixi y
     fixY (y) {
       return mapY - y
+    },
+    reset () {
+      this.x = document.documentElement.clientWidth
+      this.y = document.documentElement.clientHeight
     }
   }
 
+  // Init viewport
+  viewport.reset()
+
   window.onresize = function () {
-    viewport.x = document.documentElement.clientWidth
-    viewport.y = document.documentElement.clientHeight
+    viewport.reset()
     pixiRenderer.resize(viewport.x, viewport.y)
   }
 
@@ -176,9 +182,9 @@ exports.init = function ({ x: mapX, y: mapY }, walls) {
     // Update player sprites
     for (const id in simulation.players) {
       const player = simulation.players[id]
-      const [x, y] = Array.from(player.body.interpolatedPosition)
       if (state.sprites[id]) {
         // player sprite exists, so update it
+        const [x, y] = Array.from(player.body.interpolatedPosition)
         const container = state.sprites[id]
         const sprite = container.getChildAt(0)
         container.position.set(x, viewport.fixY(y))
@@ -188,16 +194,17 @@ exports.init = function ({ x: mapX, y: mapY }, walls) {
           stage.position.x = viewport.x/2 - x
           stage.position.y = viewport.y/2 - viewport.fixY(y)
           // also, check if we are out of bounds to display wallWarning
-          if (x < 0 || x > mapX || y < 0 || y > mapY) {
-            wallWarning.position.x = x
-            wallWarning.position.y = viewport.fixY(y + 50)
-            wallWarning.visible = true
-          } else {
-            wallWarning.visible = false
-          }
+          /* if (x < 0 || x > mapX || y < 0 || y > mapY) {
+           *   wallWarning.position.x = x
+           *   wallWarning.position.y = viewport.fixY(y + 50)
+           *   wallWarning.visible = true
+           * } else {
+           *   wallWarning.visible = false
+           * }*/
         }
       } else {
         // player sprite must be created
+        const [x, y] = Array.from(player.body.position)
         const container = new PIXI.Container()
         // container children (the ship sprite and the username)
         const sprite = new PIXI.Sprite.fromImage('./img/warbird.gif')
@@ -229,10 +236,10 @@ exports.init = function ({ x: mapX, y: mapY }, walls) {
     // Upsert bomb sprites
     for (const id in simulation.bombs) {
       const bomb = simulation.bombs[id]
-      const [x, y] = Array.from(bomb.body.interpolatedPosition)
       if (state.sprites[id]) {
         // sprite exists, so updated it
         const sprite = state.sprites[id]
+        const [x, y] = Array.from(bomb.body.interpolatedPosition)
         sprite.position.set(x, viewport.fixY(y))
       } else {
         // sprite does not exist, so create it
@@ -240,6 +247,7 @@ exports.init = function ({ x: mapX, y: mapY }, walls) {
         sprite.anchor.set(0.5)
         sprite.height = 18
         sprite.width = 18
+        const [x, y] = Array.from(bomb.body.position)
         sprite.position.set(x, viewport.fixY(y))
         state.sprites[id] = sprite
         stage.addChild(sprite)
