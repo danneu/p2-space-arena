@@ -290,8 +290,24 @@ state.simulation.world.on('endContact', ({bodyA, bodyB}) => {
     isVisible = !isVisible
     console.log('*************************** isVisible', isVisible)
     // Clear keys pressed when user tabs out
-    if (state.userId && !isVisible) {
+    if (!isVisible) {
       keysDown = { up: false, down: false, left: false, right: false, bomb: false }
     }
   })
+})()
+
+
+// TRACK IF WINDOW HAS FOCUS
+
+
+;(function () {
+  let isFocused = true
+  window.onfocus = () => {
+    isFocused = true
+  }
+  window.onblur = () => {
+    isFocused = true
+    // Clear keys pressed when game loses focus
+    keysDown = { up: false, down: false, left: false, right: false, bomb: false }
+  }
 })()
