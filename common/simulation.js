@@ -45,7 +45,8 @@ function Simulation ({x, y}) {
   this.world = (function () {
     const world = new p2.World()
     world.applyGravity = false
-    world.useFrictionGravityOnZeroGravity = true
+    // turn off event we aren't using
+    world.emitImpactEvent = false
     return world
   })()
   this.players = Object.create(null) // mapping of userId -> Player
