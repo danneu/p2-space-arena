@@ -119,11 +119,7 @@ function onBombShot (socket, {id, position, velocity}) {
 let lastTime
 
 function update () {
-  const now = performance.now()
-  const deltaTime = lastTime ? (now - lastTime) / 1000 : 0
-  state.simulation.world.step(deltaTime)
-  // Prepare for next frame
-  lastTime = now
+  state.simulation.step()
 }
 
 

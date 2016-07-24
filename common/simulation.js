@@ -170,14 +170,8 @@ Simulation.prototype.shootBomb = function (userId) {
 ////////////////////////////////////////////////////////////
 
 
-// re: maxSubSteps = 1
-// On the client, no matter how far behind we are, we only want to
-// do one step, we don't want to catch up, like when tab becomes
-// active again.
-Simulation.prototype.step = function (deltaTime, maxSubSteps = 1) {
-  // Now we simulate a step with our new forces
-  //this.world.step(1 / 60, deltaTime, maxSubSteps)
-  this.world.step(1 / 60)
+Simulation.prototype.step = function (deltaTime, maxSubSteps = 10) {
+  this.world.step(1 / 60, deltaTime, maxSubSteps)
 }
 
 

@@ -172,8 +172,12 @@ function update (now) {
     }
   }
   // Physics
-  //const deltaTime = lastTime ? (now - lastTime) / 1000 : 0
-  state.simulation.step()
+  //
+  // maxSubSteps = 1 because on the client, no matter how far
+  // behind we are, we only want to do one step for now. we don't
+  // want to catch up, like when tab becomes active again.
+  const deltaTime = lastTime ? (now - lastTime) / 1000 : 0
+  state.simulation.step(deltaTime, 1)
   // Render
   render(state.simulation, state.spritesToRemove, state.userId)
   // Prepare for next frame
