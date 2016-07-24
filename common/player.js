@@ -4,6 +4,7 @@ const p2 = require('p2')
 const faker = require('faker')
 // 1st
 const Material = require('./material')
+const { ALL, PLAYER } = require('./CollisionGroup')
 
 
 module.exports = Player
@@ -19,12 +20,14 @@ function Player (id, team, position, angle) {
   this.body = (function() {
     const body = new p2.Body({
       id,
-      //mass: 5,
       mass: 1,
       position: position || [100, 100]
     })
     body.isPlayer = true
     const shape = new p2.Circle({ radius: 15 })
+    // Players don't collide with each other
+    shape.collisionGroup = PLAYER
+    shape.collisionMask = ALL ^ PLAYER
     shape.material = Material.ship
     body.addShape(shape)
     body.angle = angle || 0

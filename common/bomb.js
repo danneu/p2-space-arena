@@ -8,6 +8,7 @@ const vec2 = p2.vec2
 // 1st
 const Physics = require('./physics')
 const Uuid = require('./uuid')
+const { ALL, BOMB } = require('./CollisionGroup')
 
 
 module.exports = Bomb
@@ -28,7 +29,11 @@ function Bomb (id, userId, position, velocity) {
     })
     // does not produce contact forces
     body.collisionResponse = false
-    body.addShape(new p2.Circle({ radius: 9 }))
+    const shape = new p2.Circle({ radius: 9 })
+    shape.collisionGroup = BOMB
+    // Bombs dont collide with each other
+    shape.collisionMask = ALL ^ BOMB
+    body.addShape(shape)
     body.velocity = velocity
     body.isBomb = true
     return body

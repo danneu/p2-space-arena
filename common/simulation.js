@@ -10,6 +10,7 @@ const Physics = require('./physics')
 const Player = require('./player')
 const Bomb = require('./bomb')
 const Material = require('./material')
+const { ALL, WALL } = require('./CollisionGroup')
 
 
 module.exports = Simulation
@@ -25,6 +26,9 @@ function makeWall (id, x, y, angle) {
   const body = new p2.Body({ id, mass: 0, angle })
   const shape = new p2.Plane()
   shape.material = Material.wall
+  shape.collisionGroup = WALL
+  // Walls collide with everything except walls
+  shape.collisionMask = ALL ^ WALL
   body.addShape(shape)
   body.position = [x, y]
   body.isWall = true
