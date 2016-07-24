@@ -37,7 +37,8 @@ socket.on(':user_id', (userId) => {
   console.log('[recv :user_id]', userId)
   state.userId = userId
   // Start update loop when user is ready
-  requestAnimationFrame(update)
+  setInterval(update, 1000 / 60)
+  requestAnimationFrame(renderLoop)
 })
 
 
@@ -146,10 +147,10 @@ function handleInput (key) {
 const render = renderer.init({ x: 1400, y: 400 }, state.simulation.walls)
 
 
-let lastTime
+let lastUpdate
 
-function update (now) {
-  requestAnimationFrame(update)
+function update () {
+  const now = performance.now()
   // Gather input this frame
   const turnItem = handleInput('left') || handleInput('right')
   const thrustItem = handleInput('up') || handleInput('down')
@@ -172,19 +173,24 @@ function update (now) {
     }
   }
   // Physics
-  //
-  // maxSubSteps = 1 because on the client, no matter how far
-  // behind we are, we only want to do one step for now. we don't
-  // want to catch up, like when tab becomes active again.
-  const deltaTime = lastTime ? (now - lastTime) / 1000 : 0
-  state.simulation.step(deltaTime, 1)
-  // Render
-  render(state.simulation, state.spritesToRemove, state.userId)
+  const deltaTime = lastUpdate ? (now - lastUpdate) / 1000 : 0
+  // maxSubStep is 125 to ensure 1/60*maxSubStep is always less than our
+  // max deltaTime which should be about 1.00 seconds (when user tabs
+  // away from the game)
+  state.simulation.step(deltaTime, 125)
   // Prepare for next frame
-  state.spritesToRemove = []
-  lastTime = now
+  lastUpdate = now
 }
 
+
+// RENDER LOOP
+
+
+function renderLoop () {
+  requestAnimationFrame(renderLoop)
+  render(state.simulation, state.spritesToRemove, state.userId)
+  state.spritesToRemove = []
+}
 
 
 // APPLY FORCES TO CURR USER
@@ -252,16 +258,32 @@ state.simulation.world.on('endContact', ({bodyA, bodyB}) => {
 
 // BROADCAST POSITION -> SERVER
 
+;(function () {
+  const perSecond = 15
 
-function broadcastPosition () {
-  if (!state.userId) return // bail if user hasnt loaded yet
-  const player = state.simulation.getPlayer(state.userId)
-  socket.emit(':position', {
-    position: player.body.position,
-    angle: player.body.angle,
-    velocity: player.body.velocity
+  function broadcastPosition () {
+    if (!state.userId) return // bail if user hasnt loaded yet
+    const player = state.simulation.getPlayer(state.userId)
+    socket.emit(':position', {
+      position: player.body.interpolatedPosition,
+      angle: player.body.interpolatedAngle,
+      velocity: player.body.velocity
+    })
+  }
+
+  setInterval(broadcastPosition, 1000 / perSecond)
+})()
+
+
+// DEBUG: PRINT WINDOW VISIBILITY
+
+;(function () {
+  let isVisible = true
+  document.addEventListener('visibilitychange', () => {
+    isVisible = !isVisible
+    console.log('*************************** isVisible', isVisible)
+    if (isVisible) {
+      //debugger
+    }
   })
-}
-
-const perSecond = 15
-setInterval(broadcastPosition, 1000 / perSecond)
+})()

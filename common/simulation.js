@@ -174,8 +174,15 @@ Simulation.prototype.shootBomb = function (userId) {
 ////////////////////////////////////////////////////////////
 
 
-Simulation.prototype.step = function (deltaTime, maxSubSteps = 10) {
-  this.world.step(1 / 60, deltaTime, maxSubSteps)
+const timeStep = 1 / 60
+
+// If deltaTime is not passed in, then there will be interpolation
+Simulation.prototype.step = function (deltaTime, maxSubSteps) {
+  if (deltaTime) {
+    this.world.step(timeStep, deltaTime, maxSubSteps || 10)
+  } else {
+    this.world.step(timeStep)
+  }
 }
 
 
