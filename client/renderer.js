@@ -165,10 +165,10 @@ exports.init = function ({ x: mapX, y: mapY }, walls) {
       }
     }
     // Create explosions
-    for (const bomb of detonatedBombs) {
+    for (const [id, x, y] of detonatedBombs) {
       const clip = makeExplosion()
-      clip.position.set(bomb.body.position[0], viewport.fixY(bomb.body.position[1]))
-      explosions[bomb.id] = clip
+      clip.position.set(x, viewport.fixY(y))
+      explosions[id] = clip
       stage.addChild(clip)
     }
     // Update player sprites

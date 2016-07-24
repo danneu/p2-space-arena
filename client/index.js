@@ -75,8 +75,7 @@ socket.on(':bombShot', ({id, userId, position, velocity}) => {
 // Reminder: bomb and victim are just json data, not instances
 socket.on(':bombHit', ({bomb: bombData, victim}) => {
   console.log('[recv :bombHit] bomb=', bombData, 'victim=', victim)
-  const bomb = state.simulation.getBomb(bombData.id)
-  state.detonatedBombs.push(bomb)
+  state.detonatedBombs.push([bomb.id, ...bomb.position])
   state.simulation.removeBomb(bomb.id)
   state.spritesToRemove.push(bomb.id)
 })
@@ -236,7 +235,7 @@ state.simulation.world.on('beginContact', ({bodyA, bodyB}) => {
   // when bomb collides with wall, bodyA always seems to be the bomb,
   // bodyB always seems to be the wall. can i depend on this?
   if (bodyA.isWall && bodyB.isBomb) {
-    state.detonatedBombs.push(state.simulation.getBomb(bodyB.id))
+    state.detonatedBombs.push([bodyB.id, ...Array.from(bodyB.position)])
     state.simulation.removeBomb(bodyB.id)
     state.spritesToRemove.push(bodyB.id)
   } else if (bodyA.isBomb && bodyB.isWall) {
