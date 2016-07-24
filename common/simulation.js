@@ -187,6 +187,10 @@ Simulation.prototype.step = function (deltaTime, maxSubSteps) {
   } else {
     this.world.step(timeStep)
   }
+  // After the step, enforce player angles
+  for (const id in this.players) {
+    this.players[id].updateDeg()
+  }
 }
 
 

@@ -9,6 +9,7 @@ const vec2 = p2.vec2
 const Physics = require('./physics')
 const Uuid = require('./uuid')
 const { ALL, BOMB } = require('./CollisionGroup')
+const util = require('./util')
 
 
 module.exports = Bomb
@@ -53,7 +54,7 @@ Bomb.fromPlayer = function (player) {
   const id = Uuid.generate()
   const position = Physics.nose(player.body)
   const velocity = vec2.create()
-  vec2.rotate(velocity, vec2.fromValues(0, 300), -player.body.angle)
+  vec2.rotate(velocity, vec2.fromValues(0, 300), -util.deg2rad(player.deg))
   vec2.add(velocity, player.body.velocity, velocity)
   return new Bomb(id, player.id, position, velocity)
 }

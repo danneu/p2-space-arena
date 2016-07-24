@@ -199,6 +199,20 @@ function renderLoop () {
 }
 
 
+// UPDATE TEMPORARY OVERLAY
+
+;(function () {
+  const nodes = {
+    angle: document.querySelector('#player-angle')
+  }
+  state.simulation.world.on('postStep', () => {
+    if (!state.userId) return
+    nodes.angle.innerHTML = Math.floor(state.simulation.getPlayer(state.userId).deg)
+  })
+})()
+
+
+
 // APPLY FORCES TO CURR USER
 
 

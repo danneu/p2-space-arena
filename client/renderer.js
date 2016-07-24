@@ -2,6 +2,8 @@
 
 // 3rd
 const PIXI = require('pixi.js')
+// 1st
+const util = require('../common/util')
 
 
 // Initialize the renderer by passing in the actual map dimensions,
@@ -180,7 +182,7 @@ exports.init = function ({ x: mapX, y: mapY }, walls) {
         const container = state.sprites[id]
         const sprite = container.getChildAt(0)
         container.position.set(x, viewport.fixY(y))
-        sprite.rotation = player.body.interpolatedAngle
+        sprite.rotation = util.clampRad(player.body.interpolatedAngle)
         // if this player is us, offset stage so that we are centered
         if (player.id === currUserId) {
           stage.position.x = viewport.x/2 - x
@@ -216,7 +218,7 @@ exports.init = function ({ x: mapX, y: mapY }, walls) {
         sprite.height = 30
         sprite.width = 30
         container.position.set(x, viewport.fixY(y))
-        sprite.rotation = player.body.interpolatedAngle
+        sprite.rotation = util.clampRad(player.body.interpolatedAngle)
         text.position.set(sprite.x + 10, sprite.y + 10)
         container.addChild(sprite)
         container.addChild(text)

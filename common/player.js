@@ -5,6 +5,7 @@ const faker = require('faker')
 // 1st
 const Material = require('./material')
 const { ALL, PLAYER } = require('./CollisionGroup')
+const util = require('./util')
 
 
 module.exports = Player
@@ -17,6 +18,9 @@ function Player (id, team, position, angle) {
   this.uname = faker.internet.userName().slice(0, 14)
   this.team = team
   this.lastBombAt = 0
+  // The player's clamped angle in degrees. Use this for game logic,
+  // like when calculating the trajectory of the bomb they're shooting.
+  this.deg = util.rad2deg(angle || 0)
   this.body = (function() {
     const body = new p2.Body({
       id,
@@ -62,4 +66,10 @@ Player.prototype.toJson = function () {
     velocity: [this.body.velocity[0], this.body.velocity[1]],
     angle: this.body.angle
   }
+}
+
+
+// Clamps the player's angle to 9-degree intervals
+Player.prototype.updateDeg = function () {
+  this.deg = util.rad2deg(util.clampRad(this.body.angle))
 }
