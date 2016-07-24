@@ -43,7 +43,7 @@ exports.normalizeAngle = function (body) {
 // returns position [x, y] of body's nose based on its rotation angle
 exports.nose = function (body) {
   var r = body.boundingRadius
-  var [x, y] = body.position
+  var [x, y] = Array.from(body.position)
   var noseX = x + r * Math.cos(body.angle - Math.PI/2)
   // -1 to fix for pixi's inverted y-axis
   var noseY = y + r * Math.sin(body.angle - Math.PI/2) * -1

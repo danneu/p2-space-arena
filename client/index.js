@@ -273,7 +273,7 @@ state.simulation.world.on('beginContact', ({bodyA, bodyB}) => {
 
 state.simulation.world.on('beginContact', ({bodyA, bodyB}) => {
   if (bodyB.isPlayer && bodyA.isWall) {
-    bodyB.damping = 0.75
+    bodyB.damping = 0.85
   }
 })
 
