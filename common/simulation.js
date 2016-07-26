@@ -42,6 +42,8 @@ function makeWall (id, x, y, angle) {
 function Simulation ({x, y}) {
   assert(Number.isInteger(x))
   assert(Number.isInteger(y))
+  this.width = x
+  this.height = y
   this.world = (function () {
     const world = new p2.World()
     world.applyGravity = false
@@ -65,6 +67,9 @@ function Simulation ({x, y}) {
   this.world.addContactMaterial(Material.wallVsShip)
 }
 
+function randInt (min, max) {
+  return Math.floor(Math.random() * (max - min + 1) + min)
+}
 
 // This method should be used to init a Player instance since
 // it assigns the team and sets the position based on simulation state.
@@ -72,9 +77,11 @@ function Simulation ({x, y}) {
 // Returns Player
 Simulation.prototype.createPlayer = function (id) {
   assert(Number.isInteger(id))
-  // ship x coord determined by how many players are in the game
-  // to avoid the tired case of overlapping in development
-  const position = [100 * (this.playerCount() + 1), 100]
+  // spawn player randomly
+  const position = [
+    randInt(15, this.width - 15),
+    randInt(15, this.height - 15)
+  ]
   return new Player(id, this.getNextTeamAssignment(), position)
 }
 
