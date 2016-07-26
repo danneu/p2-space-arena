@@ -81,17 +81,6 @@ from the server.
 - p2's (0, 0) origin is on the bottom-left and increases up and
   to the right. Pixi's origin is on the top-left and increases
   down and to the right. It's painful having to flip the `y`.
-- [Giving each p2.Plane an id seemed to fix it...?!] 
-  Ships can go out of bounds for some reason. I enclosed
-  the `p2.World` with a `p2.Panel` on each side which, in
-  my early testing, seemed impossible to tunnel through.
-  Maybe something changed during a rewrite I did today, but
-  not ships will often just drift across the panel border.
-- When the user switches to another tab and then back to
-  the game (accumulating frames at a slow rate), weird things
-  happen. Bombs that were in fight before the tab-away will
-  still be in flight when the player tabs back even though they
-  detonated long ago. Stuff like that needs to be fixed.
 
 ## Notes to self
 
