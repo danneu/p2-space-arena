@@ -55,6 +55,7 @@ Bomb.fromJson = function (data) {
 
 
 Bomb.fromPlayer = function (player) {
+  player.curEnergy -= player.bombCost
   const id = Uuid.generate()
   const position = Physics.nose(player.body)
   const velocity = vec2.create()

@@ -175,6 +175,8 @@ Simulation.prototype.shootBomb = function (userId) {
   const player = this.getPlayer(userId)
   // check cooldown
   if (Date.now() - player.lastBombAt < 1000) return
+  // check energy
+  if (player.curEnergy - player.bombCost < 0) return
   const bomb = Bomb.fromPlayer(player)
   this.bombs[bomb.id] = bomb
   this.world.addBody(bomb.body)
@@ -196,9 +198,12 @@ Simulation.prototype.step = function (deltaTime, maxSubSteps) {
   } else {
     this.world.step(timeStep)
   }
-  // After the step, enforce player angles
   for (const id in this.players) {
-    this.players[id].updateDeg()
+    const player = this.players[id]
+    // After the step, enforce player angles
+    player.updateDeg()
+    // Recharge player energy
+    player.rechargeEnergy(deltaTime || timeStep)
   }
 }
 

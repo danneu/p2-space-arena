@@ -207,7 +207,9 @@ function renderLoop () {
   const nodes = {
     angle: document.querySelector('#player-angle'),
     bodyAngle: document.querySelector('#body-angle'),
-    speed: document.querySelector('#player-speed')
+    speed: document.querySelector('#player-speed'),
+    curEnergy: document.querySelector('#player-cur-energy'),
+    maxEnergy: document.querySelector('#player-max-energy'),
   }
   state.simulation.world.on('postStep', () => {
     if (!state.userId) return
@@ -215,6 +217,8 @@ function renderLoop () {
     nodes.angle.innerHTML = Math.floor(player.deg)
     nodes.bodyAngle.innerHTML = util.rad2deg(util.normalizeRad(player.body.angle)).toFixed(2)
     nodes.speed.innerHTML = vec2.length(player.body.velocity).toFixed(2)
+    nodes.curEnergy.innerHTML = player.curEnergy
+    nodes.maxEnergy.innerHTML = player.maxEnergy
   })
 })()
 
