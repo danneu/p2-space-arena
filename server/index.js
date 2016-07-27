@@ -17,19 +17,7 @@ const Bomb = require('../common/bomb')
 
 
 const state = {
-  // create a random level
-  simulation: (function () {
-    const tilesize = 32
-    const width = 1400
-    const height = 400
-    let tiles = []
-    for (let i = 0; i < 25; i++) {
-      const x = util.randInt(tilesize, 1400 - tilesize)
-      const y = util.randInt(tilesize, 400 - tilesize)
-      tiles.push([x, y])
-    }
-    return new Simulation({ width, height, tiles })
-  })(),
+  simulation: Simulation.default(),
   startTime: Date.now()
 }
 

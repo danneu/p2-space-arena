@@ -256,3 +256,45 @@ Simulation.prototype.toSnapshot = function () {
   }
   return snapshot
 }
+
+
+// STATIC
+
+
+Simulation.fromData = function (tilesize, map) {
+  console.assert(Number.isInteger(tilesize))
+  console.assert(Array.isArray(map))
+  map = map.reverse()
+  const width = map[0].length * tilesize
+  const height = map.length * tilesize
+  console.log({width, height})
+  let tiles = []
+  for (let y = 0; y < map.length; y++) {
+    for (let x = 0; x < map[0].length; x++) {
+      if (map[y][x] === 'X') {
+        // Tiles are anchored at their center
+        tiles.push([x * tilesize + tilesize/2, y * tilesize + tilesize/2])
+      }
+    }
+  }
+  return new Simulation({ width, height, tiles })
+}
+
+
+Simulation.default = function () {
+  const map = [
+    '....................X....................',
+    '....................X....................',
+    '....XXX.....XXX.....X....X........XXX....',
+    '.......X.......X....X.......X....X...X...',
+    'XX......X......X.............X..X.......X',
+    '.....X.................X.................',
+    '.....X.............X.....X..........X....',
+    'XX......X................X......X...X...X',
+    '.......X..........XXXXX..........X.......',
+    '....XXX....XXXXX.........XXXX.....XXX....',
+    '.........................................',
+    '..................X...X..................',
+  ]
+  return Simulation.fromData(32, map)
+}
