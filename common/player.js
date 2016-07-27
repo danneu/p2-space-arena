@@ -32,9 +32,9 @@ function Player (id, team, position, angle) {
       position: position || [100, 100]
     })
     body.isPlayer = true
-    // graphic radius is 15, but seems best to make collision
-    // radius a lil smaller
-    const shape = new p2.Circle({ radius: 12 })
+    // TODO: graphic radius is 15, but seems best to make collision
+    // radius a lil smaller for wall collisions, but not bomb collisions.
+    const shape = new p2.Circle({ radius: 15 })
     // Players don't collide with each other
     shape.collisionGroup = PLAYER
     shape.collisionMask = ALL ^ PLAYER
