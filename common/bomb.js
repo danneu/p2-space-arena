@@ -34,7 +34,7 @@ function Bomb (id, userId, position, velocity) {
     body.collisionResponse = false
     // only triggers on overlap
     body.sensor = true
-    const shape = new p2.Circle({ radius: 9 })
+    const shape = new p2.Circle({ radius: 1 })
     shape.collisionGroup = BOMB
     // Bombs dont collide with each other
     shape.collisionMask = ALL ^ BOMB

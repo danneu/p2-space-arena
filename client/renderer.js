@@ -8,7 +8,7 @@ const util = require('../common/util')
 
 // Initialize the renderer by passing in the actual map dimensions,
 // which is different from the viewport dimensions.
-exports.init = function ({ x: mapX, y: mapY }, walls) {
+exports.init = function ({ x: mapX, y: mapY }, walls, tiles) {
 
   // we assign this soon, but i need to be able to access it
   // in window.onresize.
@@ -119,6 +119,18 @@ exports.init = function ({ x: mapX, y: mapY }, walls) {
   })()
 
 
+  // TILES
+
+
+  for (const body of tiles) {
+    const sprite = new PIXI.Sprite.fromImage('./img/tile1.gif')
+    sprite.position.set(body.position[0], viewport.fixY(body.position[1]))
+    sprite.width = body.tilesize
+    sprite.height = body.tilesize
+    sprite.anchor.set(0.5)
+    stage.addChild(sprite)
+  }
+
 
   // COLORS
 
@@ -194,13 +206,13 @@ exports.init = function ({ x: mapX, y: mapY }, walls) {
           stage.position.x = viewport.x/2 - x
           stage.position.y = viewport.y/2 - viewport.fixY(y)
           // also, check if we are out of bounds to display wallWarning
-          /* if (x < 0 || x > mapX || y < 0 || y > mapY) {
-           *   wallWarning.position.x = x
-           *   wallWarning.position.y = viewport.fixY(y + 50)
-           *   wallWarning.visible = true
-           * } else {
-           *   wallWarning.visible = false
-           * }*/
+          if (x < 0 || x > mapX || y < 0 || y > mapY) {
+            wallWarning.position.x = x
+            wallWarning.position.y = viewport.fixY(y + 50)
+            wallWarning.visible = true
+          } else {
+            wallWarning.visible = false
+          }
         }
       } else {
         // player sprite must be created

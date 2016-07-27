@@ -16,8 +16,10 @@ const renderer = require('./renderer')
 
 
 const state = {
+  // these get assigned once client has received :init payload
   userId: null,
-  simulation: new Simulation({ x: 1400, y: 400 }),
+  render: null,
+  simulation: null,
   // Pass into `render` when we need to remove a sprite
   // Remember to reset it after render.
   spritesToRemove: [],
@@ -39,12 +41,17 @@ const socket = window.location.hostname === 'localhost'
 // socket.on('open', ...)
 
 
-socket.on(':user_id', (userId) => {
-  console.log('[recv :user_id]', userId)
+socket.on(':init', (data) => {
+  console.log('[recv :init]', data)
+  const {userId, map} = data
   state.userId = userId
+  state.simulation = new Simulation(map)
+  state.render = renderer.init({ x: map.width, y: map.height }, state.simulation.walls, state.simulation.tiles)
   // Start update loop when user is ready
   setInterval(update, 1000 / 60)
   requestAnimationFrame(renderLoop)
+  // Boot the client junkdrawer
+  startClientStuff()
 })
 
 
@@ -77,7 +84,14 @@ socket.on(':bombShot', ({id, userId, position, velocity}) => {
 // Reminder: bomb and victim are just json data, not instances
 socket.on(':bombHit', ({bomb, victim}) => {
   console.log('[recv :bombHit] bomb=', bomb, 'victim=', victim)
-  state.detonatedBombs.push([bomb.id, ...bomb.position])
+  const simBomb = state.simulation.getBomb(bomb.id)
+  // simBomb was already handled by local simulation (see beginContact)
+  if (!simBomb) return
+  // avoid duplicate explosions
+  if (!simBomb.body.detonated) {
+    simBomb.body.detonated = true
+    state.detonatedBombs.push([bomb.id, ...bomb.position])
+  }
   state.simulation.removeBomb(bomb.id)
   state.spritesToRemove.push(bomb.id)
 })
@@ -151,7 +165,6 @@ function handleInput (key) {
 // UPDATE LOOP
 
 
-const render = renderer.init({ x: 1400, y: 400 }, state.simulation.walls)
 
 
 let lastUpdate
@@ -195,116 +208,131 @@ function update () {
 
 function renderLoop () {
   requestAnimationFrame(renderLoop)
-  render(state.simulation, state.userId, state.spritesToRemove, state.detonatedBombs)
+  state.render(state.simulation, state.userId, state.spritesToRemove, state.detonatedBombs)
   state.detonatedBombs = []
   state.spritesToRemove = []
 }
 
 
-// UPDATE TEMPORARY OVERLAY
 
-;(function () {
-  const nodes = {
-    angle: document.querySelector('#player-angle'),
-    bodyAngle: document.querySelector('#body-angle'),
-    speed: document.querySelector('#player-speed'),
-    curEnergy: document.querySelector('#player-cur-energy'),
-    maxEnergy: document.querySelector('#player-max-energy'),
-  }
-  state.simulation.world.on('postStep', () => {
-    if (!state.userId) return
-    const player = state.simulation.getPlayer(state.userId)
-    nodes.angle.innerHTML = Math.floor(player.deg)
-    nodes.bodyAngle.innerHTML = util.rad2deg(util.normalizeRad(player.body.angle)).toFixed(2)
-    nodes.speed.innerHTML = vec2.length(player.body.velocity).toFixed(2)
-    nodes.curEnergy.innerHTML = player.curEnergy
-    nodes.maxEnergy.innerHTML = player.maxEnergy
-  })
-})()
+// Junk drawer of all the stuff we must setup after the
+// simulation is loaded.
+// TODO: Improve.
 
 
+function startClientStuff () {
+  // UPDATE TEMPORARY OVERLAY
 
-// APPLY FORCES TO CURR USER
-
-
-state.simulation.world.on('postStep', () => {
-  const player = state.simulation.getPlayer(state.userId)
-  if (!player) { console.log('wtf'); return } // wtf?
-  // Convert each input into force
-  for (const [kind, key] of player.inputs) {
-    if (kind === 'keydown') {
-      if (key === 'up') {
-        Physics.thrust(200, player.body)
-      } else if (key === 'down') {
-        Physics.thrust(-200, player.body)
-      }
-      if (key === 'left') {
-        Physics.rotateLeft(3, player.body)
-      } else if (key === 'right') {
-        Physics.rotateRight(3, player.body)
-      }
-    } else if (kind === 'keyup' && (key === 'left' || key == 'right')) {
-      Physics.zeroRotation(player.body)
+  ;(function () {
+    const nodes = {
+      angle: document.querySelector('#player-angle'),
+      bodyAngle: document.querySelector('#body-angle'),
+      speed: document.querySelector('#player-speed'),
+      curEnergy: document.querySelector('#player-cur-energy'),
+      maxEnergy: document.querySelector('#player-max-energy'),
     }
-  }
-  // Clear inputs for next frame
-  player.inputs = []
-})
-
-
-// HANDLE BODY CONTACT
-
-
-// Note: 'impact' event didn't work here with bomb.collisionResponse=false.
-state.simulation.world.on('beginContact', ({bodyA, bodyB}) => {
-  // when bomb collides with wall, bodyA always seems to be the bomb,
-  // bodyB always seems to be the wall. can i depend on this?
-  if (bodyA.isWall && bodyB.isBomb) {
-    state.detonatedBombs.push([bodyB.id, ...Array.from(bodyB.position)])
-    state.simulation.removeBomb(bodyB.id)
-    state.spritesToRemove.push(bodyB.id)
-  } else if (bodyA.isBomb && bodyB.isWall) {
-    throw new Error('Assumption failed: A=bomb B=wall')
-  }
-})
-
-
-// TRACK WHETHER PLAYER IS TOUCHING WALL
-//
-// If player it touching a wall, slow them down
-
-
-
-state.simulation.world.on('beginContact', ({bodyA, bodyB}) => {
-  if (bodyB.isPlayer && bodyA.isWall) {
-    bodyB.damping = 0.85
-  }
-})
-
-state.simulation.world.on('endContact', ({bodyA, bodyB}) => {
-  if (bodyB.isPlayer && bodyA.isWall) {
-    bodyB.damping = 0.1 // back to p2 default
-  }
-})
-
-
-// BROADCAST POSITION -> SERVER
-
-;(function () {
-  const perSecond = 15
-
-  function broadcastPosition () {
-    if (!state.userId) return // bail if user hasnt loaded yet
-    const player = state.simulation.getPlayer(state.userId)
-    socket.emit(':position', {
-      position: player.body.interpolatedPosition,
-      angle: player.body.interpolatedAngle,
-      velocity: player.body.velocity
+    state.simulation.world.on('postStep', () => {
+      const player = state.simulation.getPlayer(state.userId)
+      nodes.angle.innerHTML = Math.floor(player.deg)
+      nodes.bodyAngle.innerHTML = util.rad2deg(util.normalizeRad(player.body.angle)).toFixed(2)
+      nodes.speed.innerHTML = vec2.length(player.body.velocity).toFixed(2)
+      nodes.curEnergy.innerHTML = player.curEnergy
+      nodes.maxEnergy.innerHTML = player.maxEnergy
     })
-  }
+  })()
 
-  setInterval(broadcastPosition, 1000 / perSecond)
-})()
+
+  // APPLY FORCES TO CURR USER
+
+
+  state.simulation.world.on('postStep', () => {
+    const player = state.simulation.getPlayer(state.userId)
+    // Convert each input into force
+    for (const [kind, key] of player.inputs) {
+      if (kind === 'keydown') {
+        if (key === 'up') {
+          Physics.thrust(200, player.body)
+        } else if (key === 'down') {
+          Physics.thrust(-200, player.body)
+        }
+        if (key === 'left') {
+          Physics.rotateLeft(3, player.body)
+        } else if (key === 'right') {
+          Physics.rotateRight(3, player.body)
+        }
+      } else if (kind === 'keyup' && (key === 'left' || key == 'right')) {
+        Physics.zeroRotation(player.body)
+      }
+    }
+    // Clear inputs for next frame
+    player.inputs = []
+  })
+
+
+  // HANDLE BOMB<->WALL CONTACT
+
+
+  // Sync body.detonated with :bomb_hit
+  // body.detonated used so that :bomb_hit and this callback do not
+  // repeat each other's work like spawning two explosions
+  state.simulation.world.on('beginContact', ({bodyA, bodyB}) => {
+    if (bodyA.isWall && bodyB.isBomb) {
+      if (bodyB.detonated) return
+      bodyB.detonated = true
+      state.detonatedBombs.push([bodyB.id, ...Array.from(bodyB.position)])
+      state.simulation.removeBomb(bodyB.id)
+      state.spritesToRemove.push(bodyB.id)
+    } else if (bodyA.isBomb && bodyB.isWall) {
+      if (bodyA.detonated) return
+      bodyA.detonated = true
+      state.detonatedBombs.push([bodyA.id, ...Array.from(bodyA.position)])
+      state.simulation.removeBomb(bodyA.id)
+      state.spritesToRemove.push(bodyA.id)
+    }
+  })
+
+
+  // TRACK WHETHER PLAYER IS TOUCHING WALL
+  //
+  // If player it touching a wall, slow them down
+
+
+
+  state.simulation.world.on('beginContact', ({bodyA, bodyB}) => {
+    if (bodyB.isPlayer && bodyA.isWall) {
+      bodyB.damping = 0.85
+    } else if (bodyA.isPlayer && bodyB.isWall) {
+      bodyA.damping = 0.85
+    }
+  })
+
+  state.simulation.world.on('endContact', ({bodyA, bodyB}) => {
+    if (bodyB.isPlayer && bodyA.isWall) {
+      bodyB.damping = 0.1 // back to p2 default
+    } else if (bodyA.isPlayer && bodyB.isWall) {
+      bodyA.damping = 0.1 // back to p2 default
+    }
+  })
+
+
+  // BROADCAST POSITION -> SERVER
+
+  ;(function () {
+    const perSecond = 15
+
+    function broadcastPosition () {
+      const player = state.simulation.getPlayer(state.userId)
+      socket.emit(':position', {
+        position: player.body.interpolatedPosition,
+        angle: player.body.interpolatedAngle,
+        velocity: player.body.velocity
+      })
+    }
+
+    setInterval(broadcastPosition, 1000 / perSecond)
+  })()
+
+}
 
 
 // DEBUG: PRINT WINDOW VISIBILITY

@@ -6,6 +6,7 @@ const assert = require('assert')
 const p2 = require('p2')
 const _ = require('lodash')
 // 1st
+const util = require('./util')
 const Physics = require('./physics')
 const Player = require('./player')
 const Bomb = require('./bomb')
@@ -36,14 +37,31 @@ function makeWall (id, x, y, angle) {
 }
 
 
+function makeTile (tilesize, x, y) {
+  const body = new p2.Body()
+  body.isWall = true
+  body.position = [x, y]
+  body.tilesize = tilesize
+  const shape = new p2.Box({ width: tilesize, height: tilesize })
+  shape.material = Material.wall
+  // Walls collide with everything except walls
+  shape.collisionGroup = WALL
+  shape.collisionMask = ALL ^ WALL
+  body.addShape(shape)
+  return body
+}
+
+
 // SIMULATION
 
 
-function Simulation ({x, y}) {
-  assert(Number.isInteger(x))
-  assert(Number.isInteger(y))
-  this.width = x
-  this.height = y
+// tiles is array of positions [[x, y], ...]
+function Simulation ({width, height, tiles}) {
+  console.assert(Number.isInteger(width))
+  console.assert(Number.isInteger(height))
+  console.assert(Array.isArray(tiles))
+  this.width = width
+  this.height = height
   this.world = (function () {
     const world = new p2.World()
     world.applyGravity = false
@@ -54,22 +72,22 @@ function Simulation ({x, y}) {
   this.players = Object.create(null) // mapping of userId -> Player
   this.bombs = Object.create(null) // mapping of userId -> Bomb
   // WALLS
-  const top = makeWall('top', 0, y, Math.PI)
-  const bottom = makeWall('bottom', x, 0, 0)
-  const right = makeWall('right', x, y, Math.PI / 2)
+  const top = makeWall('top', 0, height, Math.PI)
+  const bottom = makeWall('bottom', width, 0, 0)
+  const right = makeWall('right', width, height, Math.PI / 2)
   const left = makeWall('left', 0, 0, (3 * Math.PI) / 2)
   // exposed for debug
   this.walls = [top, bottom, left, right]
   for (const body of [top, bottom, left, right]) {
     this.world.addBody(body)
   }
+  // TILES
+  this.tiles = tiles.map(([x, y]) => makeTile(32, x, y))
+  this.tiles.forEach((body) => this.world.addBody(body))
   // MATERIALS
   this.world.addContactMaterial(Material.wallVsShip)
 }
 
-function randInt (min, max) {
-  return Math.floor(Math.random() * (max - min + 1) + min)
-}
 
 // This method should be used to init a Player instance since
 // it assigns the team and sets the position based on simulation state.
@@ -79,8 +97,8 @@ Simulation.prototype.createPlayer = function (id) {
   assert(Number.isInteger(id))
   // spawn player randomly
   const position = [
-    randInt(15, this.width - 15),
-    randInt(15, this.height - 15)
+    util.randInt(15, this.width - 15),
+    util.randInt(15, this.height - 15)
   ]
   return new Player(id, this.getNextTeamAssignment(), position)
 }

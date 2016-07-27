@@ -32,7 +32,9 @@ function Player (id, team, position, angle) {
       position: position || [100, 100]
     })
     body.isPlayer = true
-    const shape = new p2.Circle({ radius: 15 })
+    // graphic radius is 15, but seems best to make collision
+    // radius a lil smaller
+    const shape = new p2.Circle({ radius: 12 })
     // Players don't collide with each other
     shape.collisionGroup = PLAYER
     shape.collisionMask = ALL ^ PLAYER
@@ -82,8 +84,7 @@ Player.prototype.updateDeg = function () {
 Player.prototype.rechargeEnergy = function (dt) {
   if (this.curEnergy === this.maxEnergy) return
   this.curEnergy = Math.min(
-    this.maxEnergy, 
+    this.maxEnergy,
     Math.round(this.curEnergy + this.energyPerSecond * dt)
   )
 }
-

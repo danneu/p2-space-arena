@@ -7,6 +7,7 @@ const Server = require('socket.io')
 const performance = { now: require('performance-now') }
 const nodeStatic = require('node-static')
 // 1st
+const util = require('../common/util')
 const Simulation = require('../common/simulation')
 const Player = require('../common/player')
 const Bomb = require('../common/bomb')
@@ -16,7 +17,19 @@ const Bomb = require('../common/bomb')
 
 
 const state = {
-  simulation: new Simulation({ x: 1400, y: 400 }),
+  // create a random level
+  simulation: (function () {
+    const tilesize = 32
+    const width = 1400
+    const height = 400
+    let tiles = []
+    for (let i = 0; i < 25; i++) {
+      const x = util.randInt(tilesize, 1400 - tilesize)
+      const y = util.randInt(tilesize, 400 - tilesize)
+      tiles.push([x, y])
+    }
+    return new Simulation({ width, height, tiles })
+  })(),
   startTime: Date.now()
 }
 
@@ -54,6 +67,14 @@ server.on('connection', (socket) => {
   const userId = uid()
   const player = state.simulation.createPlayer(userId)
   socket.userId = userId
+  socket.emit(':init', {
+    userId,
+    map: {
+      width: state.simulation.width,
+      height: state.simulation.height,
+      tiles: state.simulation.tiles.map((body) => Array.from(body.position))
+    }
+  })
   // Broadcast the newcomer to everyone including newcomer
   server.emit(':player_joined', player.toJson())
   // Tell newcomer of users already in the game
@@ -63,8 +84,6 @@ server.on('connection', (socket) => {
   // Begin simulating the player (don't want newcomer to appear
   // in snapshots til everyone got :player_joined to create his sprite)
   state.simulation.addPlayer(player)
-  // Tell newcomer their id
-  socket.emit(':user_id', userId)
   // Hook up game events
   socket.on(':position', (packet) => onPosition(socket, packet))
   socket.on(':bombShot', (bombData) => onBombShot(socket, bombData))
