@@ -216,7 +216,7 @@ Simulation.prototype.step = function (deltaTime, maxSubSteps) {
     // After the step, enforce player angles
     player.updateDeg()
     // Recharge player energy
-    player.rechargeEnergy(deltaTime || timeStep)
+    player.rechargeEnergy(deltaTime)
   }
 }
 
