@@ -209,13 +209,8 @@ Simulation.prototype.shootBomb = function (userId) {
 
 const timeStep = 1 / 60
 
-// If deltaTime is not passed in, then there will be interpolation
 Simulation.prototype.step = function (deltaTime, maxSubSteps) {
-  if (deltaTime) {
-    this.world.step(timeStep, deltaTime, maxSubSteps || 10)
-  } else {
-    this.world.step(timeStep)
-  }
+  this.world.step(timeStep, deltaTime, maxSubSteps || 10)
   for (const id in this.players) {
     const player = this.players[id]
     // After the step, enforce player angles

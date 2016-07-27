@@ -138,9 +138,11 @@ function onBombShot (socket, {id, position, velocity}) {
 let lastTime
 
 function update () {
-  state.simulation.step()
+  const now = performance.now()
+  const deltaTime = lastTime ? (now - lastTime) / 1000 : 0
+  state.simulation.step(deltaTime)
+  lastTime = now
 }
-
 
 const updatesPerSecond = 60
 setInterval(update, 1000 / updatesPerSecond)
