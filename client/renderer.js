@@ -169,6 +169,68 @@ exports.init = function ({ x: mapX, y: mapY }, walls, tiles) {
   };
 
 
+  // ENERGY BAR
+
+
+  // energy bar is the rectangle that appears beneath the player's
+  // ship to indicate how much energy they have
+  function makeEnergyBar (maxWidth) {
+    const gfx = new PIXI.Graphics()
+    gfx.beginFill(0xFFFFFF)
+    gfx.drawRect(0, 0, maxWidth, 5)
+    gfx.alpha = 0
+    return gfx
+  }
+
+
+  // 0 is empty, 1 is full
+  function getEnergyTint (scale) {
+    if (scale < 0.5) {
+      // red
+      return 0xFF0000
+    } else if (scale < 0.75) {
+      // yellow
+      return 0xF3F315
+    } else {
+      // green
+      return 0x39FF14
+    }
+  }
+
+
+  // HELPERS
+
+
+  // https://gist.github.com/gre/1650294
+  const easing = {
+    // no easing, no acceleration
+    linear: function (t) { return t },
+    // accelerating from zero velocity
+    easeInQuad: function (t) { return t*t },
+    // decelerating to zero velocity
+    easeOutQuad: function (t) { return t*(2-t) },
+    // acceleration until halfway, then deceleration
+    easeInOutQuad: function (t) { return t<.5 ? 2*t*t : -1+(4-2*t)*t },
+    // accelerating from zero velocity
+    easeInCubic: function (t) { return t*t*t },
+    // decelerating to zero velocity
+    easeOutCubic: function (t) { return (--t)*t*t+1 },
+    // acceleration until halfway, then deceleration
+    easeInOutCubic: function (t) { return t<.5 ? 4*t*t*t : (t-1)*(2*t-2)*(2*t-2)+1 },
+    // accelerating from zero velocity
+    easeInQuart: function (t) { return t*t*t*t },
+    // decelerating to zero velocity
+    easeOutQuart: function (t) { return 1-(--t)*t*t*t },
+    // acceleration until halfway, then deceleration
+    easeInOutQuart: function (t) { return t<.5 ? 8*t*t*t*t : 1-8*(--t)*t*t*t },
+    // accelerating from zero velocity
+    easeInQuint: function (t) { return t*t*t*t*t },
+    // decelerating to zero velocity
+    easeOutQuint: function (t) { return 1+(--t)*t*t*t*t },
+    // acceleration until halfway, then deceleration
+    easeInOutQuint: function (t) { return t<.5 ? 16*t*t*t*t*t : 1+16*(--t)*t*t*t*t }
+  }
+
 
   // RENDER
 
@@ -213,6 +275,14 @@ exports.init = function ({ x: mapX, y: mapY }, walls, tiles) {
           } else {
             wallWarning.visible = false
           }
+          // update energy bar
+          if (container.energyBar) {
+            const scalar = player.curEnergy / player.maxEnergy
+            container.energyBar.width = sprite.width * scalar
+            container.energyBar.alpha = 1 - easing.easeInCubic(scalar)
+            // update color
+            container.energyBar.tint = getEnergyTint(scalar)
+          }
         }
       } else {
         // player sprite must be created
@@ -238,9 +308,17 @@ exports.init = function ({ x: mapX, y: mapY }, walls, tiles) {
         sprite.width = 30
         container.position.set(x, viewport.fixY(y))
         sprite.rotation = util.clampRad(player.body.interpolatedAngle)
-        text.position.set(sprite.x + 10, sprite.y + 10)
+        text.position.set(sprite.x + 15, sprite.y + 10)
         container.addChild(sprite)
         container.addChild(text)
+        // Mount energy bar if it's current player
+        if (player.id === currUserId) {
+          const energyBar = makeEnergyBar(sprite.width)
+          energyBar.position.set(sprite.x - sprite.width / 2,
+                                 sprite.y + sprite.width / 2)
+          container.addChild(energyBar)
+          container.energyBar = energyBar
+        }
         state.sprites[id] = container
         stage.addChild(container)
       }
