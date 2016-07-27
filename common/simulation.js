@@ -20,7 +20,7 @@ module.exports = Simulation
 // HELPERS
 
 
-// Returns a p2.Body
+// Returns p2.Body
 function makeWall (id, x, y, angle) {
   // wtf, setting id on wall seems to fix tunnel issue???
   // besides, thought it had to be a number
@@ -37,6 +37,7 @@ function makeWall (id, x, y, angle) {
 }
 
 
+// Returns p2.Body
 function makeTile (tilesize, x, y) {
   const body = new p2.Body()
   body.isWall = true
@@ -56,12 +57,14 @@ function makeTile (tilesize, x, y) {
 
 
 // tiles is array of positions [[x, y], ...]
-function Simulation ({width, height, tiles}) {
+function Simulation ({width, height, tiles, tilesize}) {
   console.assert(Number.isInteger(width))
   console.assert(Number.isInteger(height))
+  console.assert(Number.isInteger(tilesize))
   console.assert(Array.isArray(tiles))
   this.width = width
   this.height = height
+  this.tilesize = tilesize
   this.world = (function () {
     const world = new p2.World()
     world.applyGravity = false
@@ -82,7 +85,7 @@ function Simulation ({width, height, tiles}) {
     this.world.addBody(body)
   }
   // TILES
-  this.tiles = tiles.map(([x, y]) => makeTile(32, x, y))
+  this.tiles = tiles.map(([x, y]) => makeTile(tilesize, x, y))
   this.tiles.forEach((body) => this.world.addBody(body))
   // MATERIALS
   this.world.addContactMaterial(Material.wallVsShip)
@@ -95,12 +98,19 @@ function Simulation ({width, height, tiles}) {
 // Returns Player
 Simulation.prototype.createPlayer = function (id) {
   assert(Number.isInteger(id))
+  const team = this.getNextTeamAssignment()
+  // 15 is the ship's hitbox radius to avoid spawning player on edge
+  const y = util.randInt(15, this.height - 15)
   // spawn player randomly
-  const position = [
-    util.randInt(15, this.width - 15),
-    util.randInt(15, this.height - 15)
-  ]
-  return new Player(id, this.getNextTeamAssignment(), position)
+  // reds on the left, blues on the right
+  let x
+  if (team === 'RED') {
+    x = util.randInt(15, this.width / 2)
+  } else {
+    x = util.randInt(this.width / 2, this.width - 15)
+  }
+  const position = [x, y]
+  return new Player(id, team, position)
 }
 
 
@@ -261,28 +271,29 @@ Simulation.prototype.toSnapshot = function () {
 // STATIC
 
 
-Simulation.fromData = function (tilesize, map) {
+Simulation.fromData = function (tilesize, data) {
   console.assert(Number.isInteger(tilesize))
-  console.assert(Array.isArray(map))
-  map = map.reverse()
-  const width = map[0].length * tilesize
-  const height = map.length * tilesize
-  console.log({width, height})
+  console.assert(Array.isArray(data))
+  data = data.reverse()
+  const width = data[0].length * tilesize
+  const height = data.length * tilesize
   let tiles = []
-  for (let y = 0; y < map.length; y++) {
-    for (let x = 0; x < map[0].length; x++) {
-      if (map[y][x] === 'X') {
+  for (let row = 0; row < data.length; row++) {
+    for (let col = 0; col < data[0].length; col++) {
+      if (data[row][col] === 'X') {
         // Tiles are anchored at their center
-        tiles.push([x * tilesize + tilesize/2, y * tilesize + tilesize/2])
+        const x = col * tilesize + tilesize / 2
+        const y = row * tilesize + tilesize / 2
+        tiles.push([x, y])
       }
     }
   }
-  return new Simulation({ width, height, tiles })
+  return new Simulation({ width, height, tiles, tilesize })
 }
 
 
 Simulation.default = function () {
-  const map = [
+  const data = [
     '....................X....................',
     '....................X....................',
     '....XXX.....XXX.....X....X........XXX....',
@@ -296,5 +307,5 @@ Simulation.default = function () {
     '.........................................',
     '..................X...X..................',
   ]
-  return Simulation.fromData(32, map)
+  return Simulation.fromData(32, data)
 }

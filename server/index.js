@@ -60,6 +60,7 @@ server.on('connection', (socket) => {
     map: {
       width: state.simulation.width,
       height: state.simulation.height,
+      tilesize: state.simulation.tilesize,
       tiles: state.simulation.tiles.map((body) => Array.from(body.position))
     }
   })
