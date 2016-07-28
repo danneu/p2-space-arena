@@ -66,6 +66,8 @@ var development = {
     'webpack-dev-server/client?http://localhost:8080',
     path.join(__dirname, 'static/index.js')
   ],
+  // https://webpack.github.io/docs/configuration.html#devtool
+  devtool: 'eval-source-map',
   devServer: {
     inline: true,
     progress: true
