@@ -123,10 +123,9 @@ Simulation.prototype.createPlayer = function (id) {
     position = util.randNth(this.blueSpawns)
   } else {
     // team doesn't have a spawn, so spawn randomly
+    // reds on the left, blues on the right
     // 15 is the ship's hitbox radius to avoid spawning player on edge
     const y = util.randInt(15, this.height - 15)
-    // spawn player randomly
-    // reds on the left, blues on the right
     let x
     if (team === 'RED') {
       x = util.randInt(15, this.width / 2)
@@ -360,18 +359,18 @@ Simulation.default = function () {
   // if a team doesn't have a spawn, their players will spawn randomly
   // on their half of the map
   const data = [
+    '>>>>>>>>>>>>>>>>>>..X..<<<<<<<<<<<<<<<<<<',
     '....................X....................',
-    '..>..>..............X.................<..',
-    '....XXX.....XXX.....X....X........XXX..<.',
-    '...>.>.X.......X....X.......X....X...X...',
-    'XX......X......X.............X..X..<.<.<X',
-    '.>...X.................X...........X.....',
-    '.>.r.X.............X.....X..........X.b..',
+    '....XXX.....XXX.....X....X........XXX....',
+    '.......X.......X....X.......X....X...X...',
+    'XX......X......X.............X..X.......X',
+    '.....X.................X...........X.....',
+    '...r.X.............X.....X..........X.b..',
     'XX......X................X......X.......X',
-    '...>.>.X..........XXXXX..........X.<.<.<.',
-    '....XXX....XXXXX.........XXXX.....XXX..<.',
-    '..>.>.>..............................<.<.',
-    '..................X...X..................',
+    '.......X..........XXXXX..........X.......',
+    '....XXX....XXXXX.........XXXX.....XXX....',
+    '.........................................',
+    '>>>>>>>>>>>>>>>>>.X...X.<<<<<<<<<<<<<<<<<',
   ]
   return Simulation.fromData(32, data)
 }
