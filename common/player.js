@@ -5,7 +5,7 @@ const vec2 = p2.vec2
 const faker = require('faker')
 // 1st
 const Material = require('./material')
-const { ALL, PLAYER } = require('./CollisionGroup')
+const Group = require('./CollisionGroup')
 const util = require('./util')
 
 
@@ -41,9 +41,9 @@ function Player (id, team, position, angle) {
     // TODO: graphic radius is 15, but seems best to make collision
     // radius a lil smaller for wall collisions, but not bomb collisions.
     const shape = new p2.Circle({ radius: 15 })
-    // Players don't collide with each other
-    shape.collisionGroup = PLAYER
-    shape.collisionMask = ALL ^ PLAYER
+    // Players don't collide with other players or teammate bombs
+    shape.collisionGroup = Group.Player[team]
+    shape.collisionMask = Group.ALL ^ Group.Player.ANY ^ Group.Bomb[team]
     shape.material = Material.ship
     body.addShape(shape)
     body.angle = angle || 0

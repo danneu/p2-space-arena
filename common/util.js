@@ -55,3 +55,10 @@ exports.randInt = function (min, max) {
 exports.randNth = function (items) {
   return items[Math.floor(Math.random() * items.length)]
 }
+
+
+// maps 'RED' -> 'BLUE' and 'BLUE' -> 'RED'
+exports.flipTeam = function (team) {
+  console.assert(team === 'RED' || team === 'BLUE')
+  return team === 'RED' ? 'BLUE' : 'RED'
+}

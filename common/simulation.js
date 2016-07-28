@@ -11,7 +11,7 @@ const Physics = require('./physics')
 const Player = require('./player')
 const Bomb = require('./bomb')
 const Material = require('./material')
-const { ALL, WALL, FLAG, PLAYER } = require('./CollisionGroup')
+const Group = require('./CollisionGroup')
 
 
 module.exports = Simulation
@@ -27,9 +27,9 @@ function makeWall (id, x, y, angle) {
   const body = new p2.Body({ id, mass: 0, angle })
   const shape = new p2.Plane()
   shape.material = Material.wall
-  shape.collisionGroup = WALL
+  shape.collisionGroup = Group.WALL
   // Walls collide with everything except walls
-  shape.collisionMask = ALL ^ WALL
+  shape.collisionMask = Group.ALL ^ Group.WALL
   body.addShape(shape)
   body.position = [x, y]
   body.isWall = true
@@ -46,8 +46,8 @@ function makeTile (tilesize, x, y) {
   const shape = new p2.Box({ width: tilesize, height: tilesize })
   shape.material = Material.wall
   // Walls collide with everything except walls
-  shape.collisionGroup = WALL
-  shape.collisionMask = ALL ^ WALL
+  shape.collisionGroup = Group.WALL
+  shape.collisionMask = Group.ALL ^ Group.WALL
   body.addShape(shape)
   return body
 }
@@ -61,8 +61,8 @@ function makeFlag (team, position) {
   const shape = (() => {
     const shape = new p2.Circle({ radius: 8 })
     // flags only collide with players
-    shape.collisionGroup = FLAG
-    shape.collisionMask = PLAYER
+    shape.collisionGroup = Group.Flag[team]
+    shape.collisionMask = Group.Player.ANY
     return shape
   })()
   // only triggers overlaps, not contacts

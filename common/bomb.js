@@ -1,28 +1,27 @@
 
 
-// Core
-const assert = require('assert')
 // 3rd
 const p2 = require('p2')
 const vec2 = p2.vec2
 // 1st
 const Physics = require('./physics')
 const Uuid = require('./uuid')
-const { ALL, BOMB } = require('./CollisionGroup')
+const Group = require('./CollisionGroup')
 const util = require('./util')
 
 
 module.exports = Bomb
 
 
-function Bomb (id, userId, position, velocity) {
-  assert(id)
-  assert(Number.isInteger(userId))
-  assert(position)
-  assert(velocity)
+function Bomb (id, userId, team, position, velocity) {
+  console.assert(id)
+  console.assert(team === 'RED' || team === 'BLUE')
+  console.assert(Number.isInteger(userId))
+  console.assert(position)
+  console.assert(position)
   this.id = id
   this.userId = userId
-  this.body = (function() {
+  this.body = (() => {
     const body = new p2.Body({
       id,
       mass: 1,
@@ -35,9 +34,10 @@ function Bomb (id, userId, position, velocity) {
     // only triggers on overlap FIXME: this belongs on shape
     /* body.sensor = true*/
     const shape = new p2.Circle({ radius: 3 })
-    shape.collisionGroup = BOMB
-    // Bombs dont collide with each other
-    shape.collisionMask = ALL ^ BOMB
+    shape.collisionGroup = Group.Bomb[team]
+    // Bombs only collide with walls and players of the other team
+    console.log('%s bomb msk should be targetting %s', team, util.flipTeam(team))
+    shape.collisionMask = Group.WALL | Group.Player[util.flipTeam(team)]
     body.addShape(shape)
     body.velocity = velocity
     body.isBomb = true
@@ -50,7 +50,7 @@ function Bomb (id, userId, position, velocity) {
 
 
 Bomb.fromJson = function (data) {
-  return new Bomb(data.id, data.userId, data.position, data.velocity)
+  return new Bomb(data.id, data.userId, data.team, data.position, data.velocity)
 }
 
 
@@ -61,7 +61,7 @@ Bomb.fromPlayer = function (player) {
   const velocity = vec2.create()
   vec2.rotate(velocity, vec2.fromValues(0, 300), -util.deg2rad(player.deg))
   vec2.add(velocity, player.body.velocity, velocity)
-  return new Bomb(id, player.id, position, velocity)
+  return new Bomb(id, player.id, player.team, position, velocity)
 }
 
 
@@ -72,6 +72,7 @@ Bomb.prototype.toJson = function () {
   return {
     id: this.id,
     userId: this.userId,
+    team: this.team,
     // TODO, send binary
     position: Array.from(this.body.position),
     velocity: Array.from(this.body.velocity)

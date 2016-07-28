@@ -124,7 +124,8 @@ socket.on(':flagCapture', (team) => {
 //
 // When we get this, add it to our simulation
 socket.on(':bombShot', ({id, userId, position, velocity}) => {
-  const bomb = new Bomb(id, userId, position, velocity)
+  const team = state.simulation.getPlayer(userId).team
+  const bomb = new Bomb(id, userId, team, position, velocity)
   state.simulation.addBomb(bomb)
 })
 

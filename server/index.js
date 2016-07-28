@@ -121,7 +121,8 @@ function onPosition (socket, packet) {
 function onBombShot (socket, {id, position, velocity}) {
   console.log('[recv :bombShot]', id, socket.userId, position, velocity)
   // server uses client's bomb id (uuid)
-  const bomb = new Bomb(id, socket.userId, position, velocity)
+  const team = state.simulation.getPlayer(socket.userId).team
+  const bomb = new Bomb(id, socket.userId, team, position, velocity)
   state.simulation.addBomb(bomb)
   // broadcast bombShot to all players except for the shooter
   socket.broadcast.emit(':bombShot', {
