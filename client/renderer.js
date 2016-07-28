@@ -153,10 +153,39 @@ exports.init = function ({ x: mapX, y: mapY }, walls, tiles, redFlagPos, blueFla
   redFlag.position.y = viewport.fixY(redFlagPos[1])
   stage.addChild(redFlag)
 
-  const blueFlagClip = sprites.makeFlag('BLUE', colors.blue)
-  blueFlagClip.position.x = blueFlagPos[0]
-  blueFlagClip.position.y = viewport.fixY(blueFlagPos[1])
-  stage.addChild(blueFlagClip)
+  const blueFlag = sprites.makeFlag('BLUE', colors.blue)
+  blueFlag.position.x = blueFlagPos[0]
+  blueFlag.position.y = viewport.fixY(blueFlagPos[1])
+  stage.addChild(blueFlag)
+
+  // These markers become visible when a flag is taken
+
+  const redFlagTaken = (function () {
+    const text = new PIXI.Text('Taken', {
+      font: '16px Arial',
+      fill: colors.red,
+      align: 'center'
+    })
+    text.anchor.set(0.5)
+    text.position = redFlag.position
+    text.visible = false
+    return text
+  })()
+  stage.addChild(redFlagTaken)
+
+  const blueFlagTaken = (function () {
+    const text = new PIXI.Text('Taken', {
+      font: '16px Arial',
+      fill: colors.blue,
+      align: 'center'
+    })
+    text.anchor.set(0.5)
+    text.position = blueFlag.position
+    text.visible = true
+    return text
+  })()
+  stage.addChild(blueFlagTaken)
+
 
 
   // EXPLOSIONS
@@ -170,6 +199,15 @@ exports.init = function ({ x: mapX, y: mapY }, walls, tiles, redFlagPos, blueFla
   const shipExplosions = {}
   // Map of bombId -> PIXI.MovieClip
   const bombExplosions = {}
+
+
+  // FLAG CARRIER GLOW
+
+
+  const redCarrierGlow = sprites.makeFlagCarrierGlow(colors.red)
+  const blueCarrierGlow = sprites.makeFlagCarrierGlow(colors.blue)
+  stage.addChild(redCarrierGlow)
+  stage.addChild(blueCarrierGlow)
 
 
   // ENERGY BAR
@@ -239,6 +277,25 @@ exports.init = function ({ x: mapX, y: mapY }, walls, tiles, redFlagPos, blueFla
 
 
   return function render (simulation, currUserId, spritesToRemove, detonatedBombs, killedPlayers) {
+    // UPDATE FLAG SPAWNS
+    if (simulation.redCarrier) {
+      redFlag.visible = false
+      redCarrierGlow.visible = true
+      redFlagTaken.visible = true
+    } else {
+      redFlag.visible = true
+      redCarrierGlow.visible = false
+      redFlagTaken.visible = false
+    }
+    if (simulation.blueCarrier) {
+      blueFlag.visible = false
+      blueCarrierGlow.visible = true
+      blueFlagTaken.visible = true
+    } else {
+      blueFlag.visible = true
+      blueCarrierGlow.visible = false
+      blueFlagTaken.visible = false
+    }
     // Update / decay / destroy existing bob explosions
     for (const id in bombExplosions) {
       const clip = bombExplosions[id]
@@ -284,6 +341,12 @@ exports.init = function ({ x: mapX, y: mapY }, walls, tiles, redFlagPos, blueFla
         const sprite = container.getChildAt(0)
         container.position.set(x, viewport.fixY(y))
         sprite.rotation = util.clampRad(player.body.interpolatedAngle)
+        // if player is flag carrier, give them the flag glow
+        if (player.id === simulation.redCarrier) {
+          redCarrierGlow.position = container.position
+        } else if (player.id === simulation.blueCarrier) {
+          blueCarrierGlow.position = container.position
+        }
         // if this player is us, offset stage so that we are centered
         if (player.id === currUserId) {
           stage.position.x = viewport.x/2 - x

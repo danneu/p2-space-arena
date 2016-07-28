@@ -175,3 +175,14 @@ exports.makeTile = (function () {
     return sprite
   }
 })()
+
+
+exports.makeFlagCarrierGlow = function (tint) {
+  const sprite = new PIXI.Sprite.fromImage('./img/circle-gradient16.png')
+  sprite.tint = tint
+  sprite.width = 128
+  sprite.height = 128
+  sprite.anchor.set(0.5)
+  sprite.visible = false
+  return sprite
+}

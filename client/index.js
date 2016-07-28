@@ -51,7 +51,7 @@ socket.on(':init', (data) => {
   state.userId = userId
   state.simulation = new Simulation(map)
   // TODO: I should just change this to renderer.init(simulation, ...)
-  state.render = renderer.init({ x: map.width, y: map.height }, state.simulation.walls, state.simulation.tiles, state.simulation.redFlag, state.simulation.blueFlag)
+  state.render = renderer.init({ x: map.width, y: map.height }, state.simulation.walls, state.simulation.tiles, Array.from(state.simulation.redFlag.position), Array.from(state.simulation.blueFlag.position))
   // Start update loop when user is ready
   setInterval(update, 1000 / 60)
   requestAnimationFrame(renderLoop)
@@ -60,17 +60,43 @@ socket.on(':init', (data) => {
 })
 
 
-socket.on(':player_joined', (data) => {
-  console.log('[recv :player_joined]', data)
+socket.on(':playerJoined', (data) => {
+  console.log('[recv :playerJoined]', data)
   const player = Player.fromJson(data)
   state.simulation.addPlayer(player)
 })
 
 
-socket.on(':player_left', (userId) => {
-  console.log('[recv :player_left]', userId)
+socket.on(':playerLeft', (userId) => {
+  console.log('[recv :playerLeft]', userId)
   state.simulation.removePlayer(userId)
   state.spritesToRemove.push(userId)
+})
+
+
+socket.on(':flagTaken', ([flagTeam, playerId]) => {
+  console.log('[recv :flagTaken', flagTeam, playerId)
+  // update simulation
+  if (flagTeam === 'RED') {
+    state.simulation.redCarrier = playerId
+  } else {
+    state.simulation.blueCarrier = playerId
+  }
+  // check if we took it
+  if (playerId === state.userId) {
+    sounds.flagTaken.play()
+  }
+})
+
+
+socket.on(':flagDropped', (flagTeam) => {
+  console.log('[recv :flagDropped', flagTeam)
+  // update simulation
+  if (flagTeam === 'RED') {
+    state.simulation.redCarrier = null
+  } else {
+    state.simulation.blueCarrier = null
+  }
 })
 
 
@@ -94,9 +120,9 @@ socket.on(':bombHit', ({bomb, victim}) => {
   if (!simBomb) return
   // avoid duplicate explosions
   if (!simBomb.body.detonated) {
-    sounds.bombExplode.play()
     simBomb.body.detonated = true
     state.detonatedBombs.push([bomb.id, ...bomb.position])
+    sounds.bombExplode.play()
   }
   state.simulation.removeBomb(bomb.id)
   state.spritesToRemove.push(bomb.id)
@@ -291,20 +317,21 @@ function startClientStuff () {
   //
   // This is a mess
   state.simulation.world.on('beginContact', ({bodyA, bodyB}) => {
+    // Check wall<->bomb
     if (bodyA.isWall && bodyB.isBomb) {
       if (bodyB.detonated) return
-      sounds.bombExplode.play()
       bodyB.detonated = true
       state.detonatedBombs.push([bodyB.id, ...Array.from(bodyB.position)])
       state.simulation.removeBomb(bodyB.id)
       state.spritesToRemove.push(bodyB.id)
+      sounds.bombExplode.play()
     } else if (bodyA.isBomb && bodyB.isWall) {
       if (bodyA.detonated) return
-      sounds.bombExplode.play()
       bodyA.detonated = true
       state.detonatedBombs.push([bodyA.id, ...Array.from(bodyA.position)])
       state.simulation.removeBomb(bodyA.id)
       state.spritesToRemove.push(bodyA.id)
+      sounds.bombExplode.play()
     }
   })
 

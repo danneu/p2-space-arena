@@ -32,8 +32,8 @@ function Bomb (id, userId, position, velocity) {
     body.damping = 0
     // does not produce contact forces
     body.collisionResponse = false
-    // only triggers on overlap
-    body.sensor = true
+    // only triggers on overlap FIXME: this belongs on shape
+    /* body.sensor = true*/
     const shape = new p2.Circle({ radius: 3 })
     shape.collisionGroup = BOMB
     // Bombs dont collide with each other

@@ -57,23 +57,26 @@ server.on('connection', (socket) => {
   socket.userId = userId
   socket.emit(':init', {
     userId,
+    // TODO: rofl clean this up
     map: {
       width: state.simulation.width,
       height: state.simulation.height,
       tilesize: state.simulation.tilesize,
       tiles: state.simulation.tiles.map((body) => Array.from(body.position)),
-      redFlag: state.simulation.redFlag,
-      blueFlag: state.simulation.blueFlag
+      redFlag: Array.from(state.simulation.redFlag.position),
+      blueFlag: Array.from(state.simulation.blueFlag.position),
+      redCarrier: state.simulation.redCarrier,
+      blueCarrier: state.simulation.blueCarrier
     }
   })
   // Broadcast the newcomer to everyone including newcomer
-  server.emit(':player_joined', player.toJson())
+  server.emit(':playerJoined', player.toJson())
   // Tell newcomer of users already in the game
   for (const id in state.simulation.players) {
-    socket.emit(':player_joined', state.simulation.players[id].toJson())
+    socket.emit(':playerJoined', state.simulation.players[id].toJson())
   }
   // Begin simulating the player (don't want newcomer to appear
-  // in snapshots til everyone got :player_joined to create his sprite)
+  // in snapshots til everyone got :playerJoined to create his sprite)
   state.simulation.addPlayer(player)
   // Hook up game events
   socket.on(':position', (packet) => onPosition(socket, packet))
@@ -83,10 +86,18 @@ server.on('connection', (socket) => {
 
 function onDisconnect (socket) {
   console.log('[disconnect] a client left')
+  // if disconnecting player was a flag carrier, then reset the carrier
+  if (socket.userId === state.simulation.redCarrier) {
+    state.simulation.redCarrier = null
+    server.emit(':flagDropped', 'RED')
+  } else if (socket.userId === state.simulation.blueCarrier) {
+    state.simulation.blueCarrier = null
+    server.emit(':flagDropped', 'BLUE')
+  }
   // drop player from simulation
   state.simulation.removePlayer(socket.userId)
   // tell everyone about it
-  server.emit(':player_left', socket.userId)
+  server.emit(':playerLeft', socket.userId)
 }
 
 
@@ -188,6 +199,34 @@ state.simulation.world.on('beginContact', ({bodyA, bodyB}) => {
   // TODO: In the future, affect victim.curEnergy by shooter.bombDamage
   // and broadcast kills. but for now, bombs just insta-gib players
   // so we can overload :bombHit.
+})
+
+
+// CHECK FOR PLAYER <-> FLAG COLLISION (FLAG PICKUP)
+
+
+state.simulation.world.on('beginContact', ({bodyA, bodyB}) => {
+  let player
+  let flagTeam
+  if (bodyA.isPlayer && bodyB.isFlag && bodyA.team !== bodyB.team) {
+    player = state.simulation.getPlayer(bodyA.id)
+    flagTeam = bodyB.team
+  } else if (bodyB.isPlayer && bodyA.isFlag && bodyA.team !== bodyB.team) {
+    player = state.simulation.getPlayer(bodyB.id)
+    flagTeam = bodyA.team
+  }
+  // there was no player collision with enemy flag
+  if (!player) return
+  // ignore collision if there is already a carrier
+  if (flagTeam === 'RED' && state.simulation.redCarrier) return
+  if (flagTeam === 'BLUE' && state.simulation.blueCarrier) return
+  // looks good, so lets update the simulation and broadcast flag pickup
+  if (flagTeam === 'RED') {
+    state.simulation.redCarrier = player.id
+  } else {
+    state.simulation.blueCarrier = player.id
+  }
+  server.emit(':flagTaken', [flagTeam, player.id])
 })
 
 

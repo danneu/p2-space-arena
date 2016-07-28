@@ -12,6 +12,7 @@ module.exports = Player
 
 
 function Player (id, team, position, angle) {
+  console.assert(team === 'RED' || team === 'BLUE')
   if (!team) throw new Error('Must initialize player with a team')
   this.id = id
   // TODO: Hook up uname
@@ -44,6 +45,8 @@ function Player (id, team, position, angle) {
     shape.material = Material.ship
     body.addShape(shape)
     body.angle = angle || 0
+    // TODO: Don't store stuff in the p2 body
+    body.team = team
     return body
   })()
   // INPUTS

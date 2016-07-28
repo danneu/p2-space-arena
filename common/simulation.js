@@ -11,7 +11,7 @@ const Physics = require('./physics')
 const Player = require('./player')
 const Bomb = require('./bomb')
 const Material = require('./material')
-const { ALL, WALL } = require('./CollisionGroup')
+const { ALL, WALL, FLAG, PLAYER } = require('./CollisionGroup')
 
 
 module.exports = Simulation
@@ -53,6 +53,31 @@ function makeTile (tilesize, x, y) {
 }
 
 
+// Returns p2.Body
+function makeFlag (team, position) {
+  console.assert(typeof team === 'string')
+  console.assert(Array.isArray(position))
+  const body = new p2.Body()
+  const shape = (() => {
+    const shape = new p2.Circle({ radius: 8 })
+    // flags only collide with players
+    shape.collisionGroup = FLAG
+    shape.collisionMask = PLAYER
+    return shape
+  })()
+  // only triggers overlaps, not contacts
+  //shape.sensor = true
+  body.addShape(shape)
+  body.position = position
+  // does not produce contact forces
+  body.collisionResponse = false
+  // TODO: Move this stuff out of the p2 body
+  body.isFlag = true
+  body.team = team
+  return body
+}
+
+
 // SIMULATION
 
 
@@ -62,7 +87,9 @@ function Simulation ({
   // each is an [x, y] position
   redFlag, blueFlag,
   // array of [x, y] spawn points
-  redSpawns = [], blueSpawns = []
+  redSpawns = [], blueSpawns = [],
+  // these are optional
+  redCarrier = null, blueCarrier = null
   }) {
   console.assert(Number.isInteger(width))
   console.assert(Number.isInteger(height))
@@ -101,8 +128,11 @@ function Simulation ({
   this.redSpawns = redSpawns
   this.blueSpawns = blueSpawns
   // FLAGS
-  this.redFlag = redFlag
-  this.blueFlag = blueFlag
+  this.redFlag = makeFlag('RED', redFlag)
+  this.blueFlag = makeFlag('BLUE', blueFlag)
+  ;[this.redFlag, this.blueFlag].forEach((body) => this.world.addBody(body))
+  this.redCarrier = redCarrier  // player id that is carrying red flag
+  this.blueCarrier = blueCarrier  // player id that is carrying blue flag
   // MATERIALS
   this.world.addContactMaterial(Material.wallVsShip)
 }

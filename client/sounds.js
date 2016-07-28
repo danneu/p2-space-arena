@@ -8,10 +8,6 @@ const { Howl, Howler } = require('howler')
 //
 // - sound.play()
 // - sound.pause()
-//
-// TODO: Add volume control, adjust each sound by a ratio since they
-//       shouldn't all be the same volume.
-//       Setting everything to volume 0.1 for now
 
 
 // here we wrap a Howl sound instance so that .play() and .pause()
@@ -40,22 +36,28 @@ exports.engine = (function () {
 
 // ship bounces off wall
 exports.bounce = new Howl({
-  src: ['./sounds/bounce.mp3']
+  src: ['./sounds/bounce.mp3'],
+  volume: 0.5
 })
 
 
 exports.bombExplode = new Howl({
   src: ['./sounds/ebombex.mp3'],
-  // volume: 0.3
   volume: 0.1
 })
 
 
 exports.bombShoot = new Howl({
   src: ['./sounds/bomb3.mp3'],
-  //volume: 0.25
   volume: 0.1
 })
+
+
+exports.flagTaken = new Howl({
+  src: ['./sounds/flag.mp3'],
+  volume: 0.1
+})
+
 
 /* exports.pickupGreen = new Howl({
  *   urls: ['./sounds/prize.mp3'],
