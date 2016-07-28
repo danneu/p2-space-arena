@@ -9,7 +9,7 @@ const sprites = require('./sprites')
 
 // Initialize the renderer by passing in the actual map dimensions,
 // which is different from the viewport dimensions.
-exports.init = function ({ x: mapX, y: mapY }, walls, tiles, redFlagPos, blueFlagPos) {
+exports.init = function ({ x: mapX, y: mapY }, walls, tiles, redFlagPos, blueFlagPos, onStageClick) {
   console.assert(Array.isArray(walls))
   console.assert(Array.isArray(tiles))
   console.assert(Array.isArray(redFlagPos))
@@ -60,6 +60,12 @@ exports.init = function ({ x: mapX, y: mapY }, walls, tiles, redFlagPos, blueFla
   pixiRenderer = PIXI.autoDetectRenderer(viewport.x, viewport.y)
   pixiRenderer.backgroundColor = 0x333333
   document.body.appendChild(pixiRenderer.view)
+
+  stage.interactive = true
+  stage.on('mousedown', (e) => {
+    const position = e.data.getLocalPosition(stage)
+    onStageClick(position)
+  })
 
 
   // TILING BACKGROUND

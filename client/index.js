@@ -51,7 +51,7 @@ socket.on(':init', (data) => {
   state.userId = userId
   state.simulation = new Simulation(map)
   // TODO: I should just change this to renderer.init(simulation, ...)
-  state.render = renderer.init({ x: map.width, y: map.height }, state.simulation.walls, state.simulation.tiles, Array.from(state.simulation.redFlag.position), Array.from(state.simulation.blueFlag.position))
+  state.render = renderer.init({ x: map.width, y: map.height }, state.simulation.walls, state.simulation.tiles, Array.from(state.simulation.redFlag.position), Array.from(state.simulation.blueFlag.position), onStageClick)
   // Start update loop when user is ready
   setInterval(update, 1000 / 60)
   requestAnimationFrame(renderLoop)
@@ -285,6 +285,19 @@ function update () {
 
   // Prepare for next frame
   lastUpdate = now
+}
+
+
+// EVENT HANDLER WHEN USER CLICKS THE STAGE
+
+
+// Teleport current user to wherever they click (for debugging)
+// yi = inverted y (pixi coords)
+function onStageClick ({x, y: yi}) {
+  if (!state.userId) return
+  // convert back to p2 coords
+  const y = state.simulation.height - yi
+  state.simulation.getPlayer(state.userId).body.position = [x, y]
 }
 
 
