@@ -6,7 +6,7 @@
 Another naive iteration of my quest to build a multiplayer 2D spaceship arena
 websocket game.
 
-![](https://dl.dropboxusercontent.com/spa/quq37nq1583x0lf/pqs8213g.png)
+![screenshot](https://dl.dropboxusercontent.com/spa/quq37nq1583x0lf/rt1_yjv8.png)
 
 ## Run Locally
 
