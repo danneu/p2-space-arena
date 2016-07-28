@@ -66,7 +66,7 @@ exports.init = function ({ x: mapX, y: mapY }, walls, tiles, redFlagPos, blueFla
 
   const bg = (function () {
     //const texture = PIXI.Texture.fromImage('./img/starfield.jpg')
-    const texture = PIXI.Texture.fromImage('./img/dark-metal-grids/3.jpg')
+    const texture = PIXI.Texture.fromImage('./img/bg.jpg')
     const sprite = new PIXI.extras.TilingSprite(texture)
     sprite.height = mapY
     sprite.width = mapX
