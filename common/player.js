@@ -17,11 +17,14 @@ function Player (id, team, position, angle) {
   // TODO: Hook up uname
   this.uname = faker.internet.userName().slice(0, 14)
   this.team = team
-  this.lastBombAt = 0
+  this.lastBombAt = 0  // millisecond timestamp since last bomb shot
   this.bombCost = 1000
-  this.energyPerSecond = 500
   this.maxEnergy = 1500
   this.curEnergy = this.maxEnergy
+  // Per seconds
+  this.energyPerSecond = 500
+  this.turnSpeed = Math.PI // rad per second
+  this.thrust =  200
   // The player's clamped angle in degrees. Use this for game logic,
   // like when calculating the trajectory of the bomb they're shooting.
   this.deg = util.rad2deg(angle || 0)
@@ -81,10 +84,10 @@ Player.prototype.updateDeg = function () {
 }
 
 
-Player.prototype.rechargeEnergy = function (dt) {
+Player.prototype.rechargeEnergy = function (deltaTime) {
   if (this.curEnergy === this.maxEnergy) return
   this.curEnergy = Math.min(
     this.maxEnergy,
-    Math.round(this.curEnergy + this.energyPerSecond * dt)
+    Math.round(this.curEnergy + this.energyPerSecond * deltaTime)
   )
 }
