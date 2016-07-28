@@ -81,9 +81,3 @@ from the server.
 - p2's (0, 0) origin is on the bottom-left and increases up and
   to the right. Pixi's origin is on the top-left and increases
   down and to the right. It's painful having to flip the `y`.
-
-## Notes to self
-
-- I set `heroku config:set NPM_CONFIG_PRODUCTION=false` on Heroku so that
-  Heroku would download devDeps. That way I can just build with webpack
-  on prod boot.
