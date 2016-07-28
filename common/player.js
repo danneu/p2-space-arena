@@ -1,6 +1,7 @@
 
 // 3rd
 const p2 = require('p2')
+const vec2 = p2.vec2
 const faker = require('faker')
 // 1st
 const Material = require('./material')
@@ -23,6 +24,7 @@ function Player (id, team, position, angle) {
   this.maxEnergy = 1500
   this.curEnergy = this.maxEnergy
   // Per seconds
+  this.maxSpeed = 200 // speed is a persecond measurement
   this.energyPerSecond = 500
   this.turnSpeed = Math.PI // rad per second
   this.thrust =  200
@@ -84,6 +86,16 @@ Player.prototype.toJson = function () {
 // Clamps the player's angle to 9-degree intervals
 Player.prototype.updateDeg = function () {
   this.deg = util.rad2deg(util.clampRad(this.body.angle))
+}
+
+
+// Clamps player's speed to their maximum
+Player.prototype.enforceMaxSpeed = function () {
+  const len = vec2.length(this.body.velocity)
+  if (len > this.maxSpeed) {
+    vec2.scale(this.body.velocity, this.body.velocity, this.maxSpeed / len)
+    console.log('postenforce', vec2.length(this.body.velocity))
+  }
 }
 
 

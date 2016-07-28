@@ -261,28 +261,6 @@ function update () {
   // away from the game)
   state.simulation.step(deltaTime, 125)
 
-  // Move current user
-  const player = state.simulation.getPlayer(state.userId)
-  // Convert each input into force
-  for (const [kind, key] of player.inputs) {
-    if (kind === 'keydown') {
-      if (key === 'up') {
-        Physics.thrust(player.thrust, player.body)
-      } else if (key === 'down') {
-        Physics.thrust(-player.thrust, player.body)
-      }
-      if (key === 'left') {
-        Physics.rotateLeft(player.turnSpeed, player.body)
-      } else if (key === 'right') {
-        Physics.rotateRight(player.turnSpeed, player.body)
-      }
-    } else if (kind === 'keyup' && (key === 'left' || key == 'right')) {
-      Physics.zeroRotation(player.body)
-    }
-  }
-  // Clear inputs for next frame
-  player.inputs = []
-
   // Prepare for next frame
   lastUpdate = now
 }
@@ -360,6 +338,38 @@ function startClientStuff () {
       nodes.maxEnergy.innerHTML = player.maxEnergy
     })
   })()
+
+
+  // POST STEP
+
+
+  state.simulation.world.on('postStep', function () {
+    const player = state.simulation.getPlayer(state.userId)
+
+    // Move current user
+    // Convert each input into force
+    for (const [kind, key] of player.inputs) {
+      if (kind === 'keydown') {
+        if (key === 'up') {
+          Physics.thrust(player.thrust, player.body)
+        } else if (key === 'down') {
+          Physics.thrust(-player.thrust, player.body)
+        }
+        if (key === 'left') {
+          Physics.rotateLeft(player.turnSpeed, player.body)
+        } else if (key === 'right') {
+          Physics.rotateRight(player.turnSpeed, player.body)
+        }
+      } else if (kind === 'keyup' && (key === 'left' || key == 'right')) {
+        Physics.zeroRotation(player.body)
+      }
+    }
+    // Clear inputs for next frame
+    player.inputs = []
+
+    // Ensure user isn't going too fast
+    player.enforceMaxSpeed()
+  })
 
 
   // HANDLE BOMB<->WALL CONTACT

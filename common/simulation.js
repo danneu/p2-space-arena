@@ -83,13 +83,13 @@ function makeFlag (team, position) {
 
 // tiles is array of positions [[x, y], ...]
 function Simulation ({
-  width, height, tiles, tilesize,
-  // each is an [x, y] position
-  redFlag, blueFlag,
-  // array of [x, y] spawn points
-  redSpawns = [], blueSpawns = [],
-  // these are optional
-  redCarrier = null, blueCarrier = null
+    width, height, tiles, tilesize,
+    // each is an [x, y] position
+    redFlag, blueFlag,
+    // array of [x, y] spawn points
+    redSpawns = [], blueSpawns = [],
+    // these are optional
+    redCarrier = null, blueCarrier = null
   }) {
   console.assert(Number.isInteger(width))
   console.assert(Number.isInteger(height))
