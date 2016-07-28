@@ -304,12 +304,34 @@ function onStageClick ({x, y: yi}) {
 // RENDER LOOP
 
 
-function renderLoop () {
+let lastRender
+
+// TODO: Relocate to the HUD update function
+const fpsNode = document.querySelector('#fps')
+let sinceFpsUpdate = 0
+let frameDurations = []
+
+function renderLoop (now) {
   requestAnimationFrame(renderLoop)
   state.render(state.simulation, state.userId, state.spritesToRemove, state.detonatedBombs, state.killedPlayers)
   state.detonatedBombs = []
   state.spritesToRemove = []
   state.killedPlayers = []
+
+  // Update FPS HUD once per second
+  sinceFpsUpdate += lastRender ? (now - lastRender) : 0
+  if (lastRender) {
+    frameDurations.push(now - lastRender)
+  }
+  if (sinceFpsUpdate >= 1000) {
+    const avgDuration = frameDurations.reduce((memo, n) => memo + n, 0) / frameDurations.length
+    fpsNode.innerHTML = Math.round(1000 / avgDuration)
+    sinceFpsUpdate = 0
+    frameDurations = []
+  }
+
+  // Prepare for next frame
+  lastRender = now
 }
 
 
@@ -327,7 +349,7 @@ function startClientStuff () {
       bodyAngle: document.querySelector('#body-angle'),
       speed: document.querySelector('#player-speed'),
       curEnergy: document.querySelector('#player-cur-energy'),
-      maxEnergy: document.querySelector('#player-max-energy'),
+      maxEnergy: document.querySelector('#player-max-energy')
     }
     state.simulation.world.on('postStep', () => {
       const player = state.simulation.getPlayer(state.userId)

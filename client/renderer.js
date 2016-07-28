@@ -377,6 +377,7 @@ exports.init = function ({ x: mapX, y: mapY }, walls, tiles, redFlagPos, blueFla
       } else {
         // player sprite must be created
         // TODO: Relocate to sprites.js
+        // don't interpolate on sprite spawn, causes weird stuff
         const [x, y] = Array.from(player.body.position)
         const container = new PIXI.Container()
         // container children (the ship sprite and the username)
@@ -424,6 +425,7 @@ exports.init = function ({ x: mapX, y: mapY }, walls, tiles, redFlagPos, blueFla
         sprite.position.set(x, viewport.fixY(y))
       } else {
         // sprite does not exist, so create it
+        // don't interpolate on sprite spawn, causes weird stuff
         const [x, y] = Array.from(bomb.body.position)
         const sprite = sprites.makeBomb('A', 3)
         sprite.position.set(x, viewport.fixY(y))
