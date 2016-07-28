@@ -356,7 +356,7 @@ exports.init = function ({ x: mapX, y: mapY }, walls, tiles, redFlagPos, blueFla
       } else {
         // sprite does not exist, so create it
         const [x, y] = Array.from(bomb.body.position)
-        const sprite = sprites.makeBomb()
+        const sprite = sprites.makeBomb('A', 3)
         sprite.position.set(x, viewport.fixY(y))
         state.sprites[id] = sprite
         stage.addChild(sprite)

@@ -68,6 +68,32 @@ exports.makeBomb = function () {
 }
 
 
+// TODO: Use clipFactory.
+//
+// kind is 'A' | 'B' | 'C', aesthetic variations
+// level is 1 | 2 | 3 | 4, maps to Continuum bomb levels (red yellow orange purple)
+exports.makeBomb = function (kind, level) {
+  // Randomize if kind/level aren't set
+  kind = kind || util.randNth(['A', 'B', 'C'])
+  level = level || Math.floor(Math.random() * 4 + 1)
+  var base = new PIXI.Texture.fromImage('./img/bombs.png')
+  var textures = []
+  var rowIdx = { 'A': 0, 'B': 1, 'C': 2 }
+  var offsetY = rowIdx[kind] *
+    (16 * 4) +       //  (rowHeight * levelsPerKind)
+    ((level - 1) * 16)
+  for (var i = 0; i < 10; i++) {
+    textures.push(new PIXI.Texture(base, new PIXI.Rectangle(i*16, offsetY, 16, 16)))
+  }
+  var clip = new PIXI.extras.MovieClip(textures)
+  clip.animationSpeed = 0.10
+  clip.anchor.set(0.5)
+  clip.scale.set(1.30)
+  clip.play()
+  return clip
+}
+
+
 // Returns PIXI.Container
 exports.makeFlag = (function () {
   function makeFlagClip (team) {
