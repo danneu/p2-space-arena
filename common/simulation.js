@@ -57,14 +57,21 @@ function makeTile (tilesize, x, y) {
 
 
 // tiles is array of positions [[x, y], ...]
-// redFlag and blueFlag are [x, y] positions
-function Simulation ({width, height, tiles, tilesize, redFlag, blueFlag }) {
+function Simulation ({
+  width, height, tiles, tilesize,
+  // each is an [x, y] position
+  redFlag, blueFlag,
+  // array of [x, y] spawn points
+  redSpawns, blueSpawns
+  }) {
   console.assert(Number.isInteger(width))
   console.assert(Number.isInteger(height))
   console.assert(Number.isInteger(tilesize))
   console.assert(Array.isArray(tiles))
   console.assert(Array.isArray(redFlag))
   console.assert(Array.isArray(blueFlag))
+  console.assert(Array.isArray(redSpawns))
+  console.assert(Array.isArray(blueSpawns))
   this.width = width
   this.height = height
   this.tilesize = tilesize
@@ -90,6 +97,9 @@ function Simulation ({width, height, tiles, tilesize, redFlag, blueFlag }) {
   // TILES
   this.tiles = tiles.map(([x, y]) => makeTile(tilesize, x, y))
   this.tiles.forEach((body) => this.world.addBody(body))
+  // SPAWNS
+  this.redSpawns = redSpawns
+  this.blueSpawns = blueSpawns
   // FLAGS
   this.redFlag = redFlag
   this.blueFlag = blueFlag
@@ -105,18 +115,31 @@ function Simulation ({width, height, tiles, tilesize, redFlag, blueFlag }) {
 Simulation.prototype.createPlayer = function (id) {
   assert(Number.isInteger(id))
   const team = this.getNextTeamAssignment()
-  // 15 is the ship's hitbox radius to avoid spawning player on edge
-  const y = util.randInt(15, this.height - 15)
-  // spawn player randomly
-  // reds on the left, blues on the right
-  let x
-  if (team === 'RED') {
-    x = util.randInt(15, this.width / 2)
+
+  let position
+  if (team === 'RED' && this.redSpawns.length > 0) {
+    position = util.randNth(this.redSpawns)
+  } else if (team === 'BLUE' && this.blueSpawns.length > 0) {
+    position = util.randNth(this.blueSpawns)
   } else {
-    x = util.randInt(this.width / 2, this.width - 15)
+    // team doesn't have a spawn, so spawn randomly
+    // 15 is the ship's hitbox radius to avoid spawning player on edge
+    const y = util.randInt(15, this.height - 15)
+    // spawn player randomly
+    // reds on the left, blues on the right
+    let x
+    if (team === 'RED') {
+      x = util.randInt(15, this.width / 2)
+    } else {
+      x = util.randInt(this.width / 2, this.width - 15)
+    }
+    position = [x, y]
   }
-  const position = [x, y]
-  return new Player(id, team, position)
+
+  // Face the player towards the opposite team
+  const angle = team === 'RED' ? Math.PI/2 : Math.PI/2*3
+
+  return new Player(id, team, position, angle)
 }
 
 
@@ -286,6 +309,8 @@ Simulation.fromData = function (tilesize, data) {
   let tiles = []
   let redFlag
   let blueFlag
+  let redSpawns = []
+  let blueSpawns = []
   for (let row = 0; row < data.length; row++) {
     for (let col = 0; col < data[0].length; col++) {
       // short-circuit on empty spaces
@@ -299,6 +324,10 @@ Simulation.fromData = function (tilesize, data) {
         redFlag = [x, y]
       } else if (data[row][col] === 'b') {
         blueFlag = [x, y]
+      } else if (data[row][col] === '>') {
+        redSpawns.push([x, y])
+      } else if (data[row][col] === '<') {
+        blueSpawns.push([x, y])
       }
     }
   }
@@ -308,23 +337,40 @@ Simulation.fromData = function (tilesize, data) {
   if (!blueFlag) {
     throw new Error('Map must contain a blue flag ("b")')
   }
-  return new Simulation({ width, height, tiles, tilesize, redFlag, blueFlag })
+  // Print stats
+  console.log('== Initializing map ==')
+  console.log('- width: %spx', width)
+  console.log('- height:%spx', height)
+  console.log('- redSpawns: %s', redSpawns.length)
+  console.log('- blueSpawns: %s', blueSpawns.length)
+  return new Simulation({
+    width, height, tiles, tilesize, redFlag, blueFlag,
+    redSpawns, blueSpawns
+  })
 }
 
 
 Simulation.default = function () {
+  // . = empty
+  // X = wall
+  // r = red flag
+  // b = blue flag
+  // > = red spawn
+  // < = blue spawn
+  // if a team doesn't have a spawn, their players will spawn randomly
+  // on their half of the map
   const data = [
     '....................X....................',
-    '....................X....................',
-    '....XXX.....XXX.....X....X........XXX....',
-    '.......X.......X....X.......X....X...X...',
-    'XX......X......X.............X..X.......X',
-    '.....X.................X.................',
-    '...r.X.............X.....X..........X.b..',
-    'XX......X................X......X...X...X',
-    '.......X..........XXXXX..........X.......',
-    '....XXX....XXXXX.........XXXX.....XXX....',
-    '.........................................',
+    '..>..>..............X.................<..',
+    '....XXX.....XXX.....X....X........XXX..<.',
+    '...>.>.X.......X....X.......X....X...X...',
+    'XX......X......X.............X..X..<.<.<X',
+    '.>...X.................X...........X.....',
+    '.>.r.X.............X.....X..........X.b..',
+    'XX......X................X......X.......X',
+    '...>.>.X..........XXXXX..........X.<.<.<.',
+    '....XXX....XXXXX.........XXXX.....XXX..<.',
+    '..>.>.>..............................<.<.',
     '..................X...X..................',
   ]
   return Simulation.fromData(32, data)
