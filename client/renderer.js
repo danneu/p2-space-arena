@@ -8,11 +8,16 @@ const util = require('../common/util')
 
 // Initialize the renderer by passing in the actual map dimensions,
 // which is different from the viewport dimensions.
-exports.init = function ({ x: mapX, y: mapY }, walls, tiles) {
+exports.init = function ({ x: mapX, y: mapY }, walls, tiles, redFlagPos, blueFlagPos) {
+  console.assert(Array.isArray(walls))
+  console.assert(Array.isArray(tiles))
+  console.assert(Array.isArray(redFlagPos))
+  console.assert(Array.isArray(blueFlagPos))
 
   // we assign this soon, but i need to be able to access it
   // in window.onresize.
   let pixiRenderer
+
 
   // STATE
 
@@ -20,6 +25,7 @@ exports.init = function ({ x: mapX, y: mapY }, walls, tiles) {
   const state = {
     sprites: Object.create(null)
   }
+
 
   // VIEWPORT
 
@@ -122,8 +128,16 @@ exports.init = function ({ x: mapX, y: mapY }, walls, tiles) {
   // TILES
 
 
+  const tileImages = [
+    './img/tile1.png',
+    './img/tile2.png',
+    './img/tile3.png'
+  ]
+
+
   for (const body of tiles) {
-    const sprite = new PIXI.Sprite.fromImage('./img/tile1.gif')
+    const image = util.randNth(tileImages)
+    const sprite = new PIXI.Sprite.fromImage(image)
     sprite.position.set(body.position[0], viewport.fixY(body.position[1]))
     sprite.width = body.tilesize
     sprite.height = body.tilesize
@@ -132,7 +146,7 @@ exports.init = function ({ x: mapX, y: mapY }, walls, tiles) {
   }
 
 
-  // COLORS
+  // TEAM COLORS
 
 
   const colors = {
@@ -166,7 +180,75 @@ exports.init = function ({ x: mapX, y: mapY }, walls, tiles) {
     clip.scale.set(1.50)
     clip.play()
     return clip
-  };
+  }
+
+
+  // FLAGS
+
+
+  // Trying to generalize the clip creation logic you can see in
+  // makeExplosion(). So far I'm only using this for flags but
+  // I'll try to use it for future movie clips.
+  //
+  // - tilesize: Integer
+  // - src: String, ex: './img/flags.png'
+  // - rows: Number of rows in the spritesheet
+  // - cols: Number of colums in the spritesheet
+  // - start: [x, y], coords of the starting spritesheet cell
+  // - end: [x, y], coords of the ending spritesheet cell
+  // - clipOpts is optional object for configuring PIXI clip of {
+  //   loop: Bool, (Default: false)
+  //   animationSpeed: 0.0 - 1.0, (Default: 1.0)
+  //   scale: Float (Default: 1.0)
+  // }
+  //
+  // TODO: Move to another file. renderer.js is getting big...
+  function clipFactory ({ tilesize, src, rows, cols, start, end, clipOpts }) {
+    const { animationSpeed, scale, loop } = clipOpts
+    const [startRow, startCol] = start
+    const [endRow, endCol] = end
+    const base = new PIXI.Texture.fromImage(src)
+    let textures = []
+    for (var col = startCol; col <= endCol; col++) {
+      for (var row = startRow; row <= endRow; row++) {
+        var x = row * tilesize
+        var y = col * tilesize
+        var rect = new PIXI.Rectangle(x, y, tilesize, tilesize)
+        textures.push(new PIXI.Texture(base, rect))
+      }
+    }
+    const clip = new PIXI.extras.MovieClip(textures)
+    clip.anchor.set(0.5)
+    clip.loop = !!loop
+    if (animationSpeed) clip.animationSpeed = animationSpeed
+    if (scale) clip.scale.set(scale)
+    clip.play()
+    return clip
+  }
+
+
+  function makeFlagClip (team) {
+    const common = {
+      tilesize: 16, rows: 2, cols: 10, src: './img/flags.png',
+      clipOpts: { loop: true, animationSpeed: 0.3 }
+    }
+    if (team === 'BLUE') {
+      return clipFactory(Object.assign({}, common, { start: [0, 0], end: [9, 0] }))
+    } else {
+      return clipFactory(Object.assign({}, common, { start: [0, 1], end: [9, 1] }))
+    }
+  }
+
+
+  const redFlagClip = makeFlagClip('RED')
+  redFlagClip.position.x = redFlagPos[0]
+  redFlagClip.position.y = viewport.fixY(redFlagPos[1])
+  stage.addChild(redFlagClip)
+
+  const blueFlagClip = makeFlagClip('BLUE')
+  blueFlagClip.position.x = blueFlagPos[0]
+  blueFlagClip.position.y = viewport.fixY(blueFlagPos[1])
+  stage.addChild(blueFlagClip)
 
 
   // ENERGY BAR

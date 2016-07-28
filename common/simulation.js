@@ -57,11 +57,14 @@ function makeTile (tilesize, x, y) {
 
 
 // tiles is array of positions [[x, y], ...]
-function Simulation ({width, height, tiles, tilesize}) {
+// redFlag and blueFlag are [x, y] positions
+function Simulation ({width, height, tiles, tilesize, redFlag, blueFlag }) {
   console.assert(Number.isInteger(width))
   console.assert(Number.isInteger(height))
   console.assert(Number.isInteger(tilesize))
   console.assert(Array.isArray(tiles))
+  console.assert(Array.isArray(redFlag))
+  console.assert(Array.isArray(blueFlag))
   this.width = width
   this.height = height
   this.tilesize = tilesize
@@ -87,6 +90,9 @@ function Simulation ({width, height, tiles, tilesize}) {
   // TILES
   this.tiles = tiles.map(([x, y]) => makeTile(tilesize, x, y))
   this.tiles.forEach((body) => this.world.addBody(body))
+  // FLAGS
+  this.redFlag = redFlag
+  this.blueFlag = blueFlag
   // MATERIALS
   this.world.addContactMaterial(Material.wallVsShip)
 }
@@ -278,17 +284,31 @@ Simulation.fromData = function (tilesize, data) {
   const width = data[0].length * tilesize
   const height = data.length * tilesize
   let tiles = []
+  let redFlag
+  let blueFlag
   for (let row = 0; row < data.length; row++) {
     for (let col = 0; col < data[0].length; col++) {
+      // short-circuit on empty spaces
+      if (data[row][col] === '.') continue
+      // Everything is anchored at its center
+      const x = col * tilesize + tilesize / 2
+      const y = row * tilesize + tilesize / 2
       if (data[row][col] === 'X') {
-        // Tiles are anchored at their center
-        const x = col * tilesize + tilesize / 2
-        const y = row * tilesize + tilesize / 2
         tiles.push([x, y])
+      } else if (data[row][col] === 'r') {
+        redFlag = [x, y]
+      } else if (data[row][col] === 'b') {
+        blueFlag = [x, y]
       }
     }
   }
-  return new Simulation({ width, height, tiles, tilesize })
+  if (!redFlag) {
+    throw new Error('Map must contain a red flag ("r")')
+  }
+  if (!blueFlag) {
+    throw new Error('Map must contain a blue flag ("b")')
+  }
+  return new Simulation({ width, height, tiles, tilesize, redFlag, blueFlag })
 }
 
 
@@ -300,7 +320,7 @@ Simulation.default = function () {
     '.......X.......X....X.......X....X...X...',
     'XX......X......X.............X..X.......X',
     '.....X.................X.................',
-    '.....X.............X.....X..........X....',
+    '...r.X.............X.....X..........X.b..',
     'XX......X................X......X...X...X',
     '.......X..........XXXXX..........X.......',
     '....XXX....XXXXX.........XXXX.....XXX....',

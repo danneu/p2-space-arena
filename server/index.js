@@ -61,7 +61,9 @@ server.on('connection', (socket) => {
       width: state.simulation.width,
       height: state.simulation.height,
       tilesize: state.simulation.tilesize,
-      tiles: state.simulation.tiles.map((body) => Array.from(body.position))
+      tiles: state.simulation.tiles.map((body) => Array.from(body.position)),
+      redFlag: state.simulation.redFlag,
+      blueFlag: state.simulation.blueFlag
     }
   })
   // Broadcast the newcomer to everyone including newcomer
