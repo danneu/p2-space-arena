@@ -185,6 +185,9 @@ state.simulation.world.on('beginContact', ({bodyA, bodyB}) => {
     bomb: bomb.toJson(),
     victim: victim.toJson()
   })
+  // TODO: In the future, affect victim.curEnergy by shooter.bombDamage
+  // and broadcast kills. but for now, bombs just insta-gib players
+  // so we can overload :bombHit.
 })
 
 

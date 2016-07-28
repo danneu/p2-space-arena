@@ -62,7 +62,7 @@ function Simulation ({
   // each is an [x, y] position
   redFlag, blueFlag,
   // array of [x, y] spawn points
-  redSpawns, blueSpawns
+  redSpawns = [], blueSpawns = []
   }) {
   console.assert(Number.isInteger(width))
   console.assert(Number.isInteger(height))

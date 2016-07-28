@@ -26,7 +26,10 @@ const state = {
   // list of [bomb] sent to render,
   // should be cleared after render since they're
   // in the renderers hands now
-  detonatedBombs: []
+  detonatedBombs: [],
+  // players killed this frame, will turn into explosions by
+  // the render step
+  killedPlayers: []
 }
 
 
@@ -95,6 +98,8 @@ socket.on(':bombHit', ({bomb, victim}) => {
   }
   state.simulation.removeBomb(bomb.id)
   state.spritesToRemove.push(bomb.id)
+  // Since bombs insta-gib players, create ship explosion here
+  state.killedPlayers.push(state.simulation.getPlayer(victim.id))
 })
 
 
@@ -232,11 +237,11 @@ function update () {
 
 function renderLoop () {
   requestAnimationFrame(renderLoop)
-  state.render(state.simulation, state.userId, state.spritesToRemove, state.detonatedBombs)
+  state.render(state.simulation, state.userId, state.spritesToRemove, state.detonatedBombs, state.killedPlayers)
   state.detonatedBombs = []
   state.spritesToRemove = []
+  state.killedPlayers = []
 }
-
 
 
 // Junk drawer of all the stuff we must setup after the

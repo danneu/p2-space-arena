@@ -194,8 +194,8 @@ exports.init = function ({ x: mapX, y: mapY }, walls, tiles, redFlagPos, blueFla
   // - src: String, ex: './img/flags.png'
   // - rows: Number of rows in the spritesheet
   // - cols: Number of colums in the spritesheet
-  // - start: [x, y], coords of the starting spritesheet cell
-  // - end: [x, y], coords of the ending spritesheet cell
+  // - start: [x, y], coords of the starting spritesheet cell (Default: [0, 0])
+  // - end: [x, y], coords of the ending spritesheet cell (Default: botright frame)
   // - clipOpts is optional object for configuring PIXI clip of {
   //   loop: Bool, (Default: false)
   //   animationSpeed: 0.0 - 1.0, (Default: 1.0)
@@ -205,8 +205,8 @@ exports.init = function ({ x: mapX, y: mapY }, walls, tiles, redFlagPos, blueFla
   // TODO: Move to another file. renderer.js is getting big...
   function clipFactory ({ tilesize, src, rows, cols, start, end, clipOpts }) {
     const { animationSpeed, scale, loop } = clipOpts
-    const [startRow, startCol] = start
-    const [endRow, endCol] = end
+    const [startRow, startCol] = start || [0, 0]
+    const [endRow, endCol] = end || [cols - 1, rows - 1]
     const base = new PIXI.Texture.fromImage(src)
     let textures = []
     for (var col = startCol; col <= endCol; col++) {
@@ -268,6 +268,25 @@ exports.init = function ({ x: mapX, y: mapY }, walls, tiles, redFlagPos, blueFla
   blueFlagClip.position.x = blueFlagPos[0]
   blueFlagClip.position.y = viewport.fixY(blueFlagPos[1])
   stage.addChild(blueFlagClip)
+
+
+  // SHIP EXPLOSIONS
+
+
+  // Map of playerId -> PIXI.MovieClip
+  const shipExplosions = {}
+
+
+  // Returns PIXI.MovieClip
+  function makeShipExplosion () {
+    return clipFactory({
+      tilesize: 48,
+      rows: 6,
+      cols: 6,
+      src: './img/explode1.png',
+      clipOpts: {loop: false, animationSpeed: 0.3}
+    })
+  }
 
 
   // ENERGY BAR
@@ -336,7 +355,7 @@ exports.init = function ({ x: mapX, y: mapY }, walls, tiles, redFlagPos, blueFla
   // RENDER
 
 
-  return function render (simulation, currUserId, spritesToRemove, detonatedBombs) {
+  return function render (simulation, currUserId, spritesToRemove, detonatedBombs, killedPlayers) {
     // Update / decay / destroy existing explosions
     for (const id in explosions) {
       const clip = explosions[id]
@@ -347,11 +366,29 @@ exports.init = function ({ x: mapX, y: mapY }, walls, tiles, redFlagPos, blueFla
         delete explosions[id]
       }
     }
-    // Create explosions
+    // Create bomb explosions
     for (const [id, x, y] of detonatedBombs) {
       const clip = makeExplosion()
       clip.position.set(x, viewport.fixY(y))
       explosions[id] = clip
+      stage.addChild(clip)
+    }
+    // DECAY / REMOVE SHIP EXPLOSIONS
+    for (const id in shipExplosions) {
+      const clip = shipExplosions[id]
+      // if clip is at final frame, destroy it
+      if (clip.currentFrame === clip.totalFrames - 1) {
+        stage.removeChild(clip)
+        clip.destroy()
+        delete shipExplosions[id]
+      }
+    }
+    // CREATE SHIP EXPLOSIONS
+    for (const player of killedPlayers) {
+      const clip = makeShipExplosion()
+      clip.position.set(player.body.position[0],
+                        viewport.fixY(player.body.position[1]))
+      shipExplosions[player.id] = clip
       stage.addChild(clip)
     }
     // Update player sprites
