@@ -452,8 +452,18 @@ function startClientStuff () {
   document.addEventListener('visibilitychange', () => {
     isVisible = !isVisible
     console.log('*************************** isVisible', isVisible)
-    // Clear keys pressed when user tabs out
-    if (!isVisible) {
+    if (isVisible) {
+      // Client is tabbing into game
+
+      // Don't render explosions that accumulated while user was away
+      // NOTE: We don't want to do this if these arrays are ever responsible
+      //       for cleaning up state garbage.
+      state.detonatedBombs = []
+      state.killedPlayers = []
+    } else {
+      // Client is tabbing out of game
+
+      // Clear keys pressed when user tabs out
       keysDown = { up: false, down: false, left: false, right: false, bomb: false }
     }
   })
