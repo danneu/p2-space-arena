@@ -87,7 +87,7 @@ var production = {
       {
         from: 'static/img/',
         to: 'img/',
-        ignore: ['graphics/*']
+        ignore: ['graphics/*', 'pxm/*']
       },
       { from: 'static/sounds/', to: 'sounds/' },
       { from: 'static/favicon.ico' }
