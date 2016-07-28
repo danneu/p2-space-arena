@@ -329,6 +329,14 @@ Simulation.prototype.toSnapshot = function () {
 // STATIC
 
 
+// . = empty
+// X = wall
+// r = red flag
+// b = blue flag
+// > = red spawn
+// < = blue spawn
+// if a team doesn't have a spawn, their players will spawn randomly
+// on their half of the map
 Simulation.fromData = function (tilesize, data) {
   console.assert(Number.isInteger(tilesize))
   console.assert(Array.isArray(data))
@@ -379,15 +387,7 @@ Simulation.fromData = function (tilesize, data) {
 }
 
 
-Simulation.default = function () {
-  // . = empty
-  // X = wall
-  // r = red flag
-  // b = blue flag
-  // > = red spawn
-  // < = blue spawn
-  // if a team doesn't have a spawn, their players will spawn randomly
-  // on their half of the map
+Simulation.example = function () {
   const data = [
     '>>>>>>>>>>>>>>>>>>..X..<<<<<<<<<<<<<<<<<<',
     '....................X....................',

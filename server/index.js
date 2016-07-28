@@ -2,6 +2,8 @@
 
 // Core
 const http = require('http')
+const fs = require('fs')
+const path = require('path')
 // 3rd
 const Server = require('socket.io')
 const performance = { now: require('performance-now') }
@@ -16,8 +18,13 @@ const Bomb = require('../common/bomb')
 // STATE
 
 
+// Load map from file
+const map1 = fs.readFileSync(path.join(__dirname, '../map1.txt'), 'utf8')
+  .split('\n')
+  .filter(Boolean)
+
 const state = {
-  simulation: Simulation.default(),
+  simulation: Simulation.fromData(32, map1),
   startTime: Date.now()
 }
 
