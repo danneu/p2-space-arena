@@ -10,6 +10,7 @@ const Player = require('../common/player')
 const Bomb = require('../common/bomb')
 const Physics = require('../common/physics')
 const renderer = require('./renderer')
+const sounds = require('./sounds')
 
 
 // STATE
@@ -93,6 +94,7 @@ socket.on(':bombHit', ({bomb, victim}) => {
   if (!simBomb) return
   // avoid duplicate explosions
   if (!simBomb.body.detonated) {
+    sounds.bombExplode.play()
     simBomb.body.detonated = true
     state.detonatedBombs.push([bomb.id, ...bomb.position])
   }
@@ -158,11 +160,19 @@ function handleInput (key) {
     const historyItem = ['keydown', key]
     /* socket.send(JSON.stringify(historyItem))*/
     wasDown[key] = true
+    // play engine sound if we're thrusting
+    if (key === 'up' || key === 'down') {
+      sounds.engine.play()
+    }
     return historyItem
   } else if (!keysDown[key] && wasDown[key]) {
     const historyItem = ['keyup', key]
     /* socket.send(JSON.stringify(historyItem))*/
     wasDown[key] = false
+    // Pause engine sound if we aren't holding down other thrust keys
+    if (wasDown['up'] === false && wasDown['down'] === false) {
+      sounds.engine.pause()
+    }
     return historyItem
   }
 }
@@ -191,6 +201,7 @@ function update () {
     const bomb = state.simulation.shootBomb(state.userId)
     // Tell server about bomb shot (if there was one)
     if (bomb) {
+      sounds.bombShoot.play()
       socket.emit(':bombShot', {
         id: bomb.id, // server uses client's id
         position: Array.from(bomb.body.position),
@@ -277,15 +288,19 @@ function startClientStuff () {
   // Sync body.detonated with :bomb_hit
   // body.detonated used so that :bomb_hit and this callback do not
   // repeat each other's work like spawning two explosions
+  //
+  // This is a mess
   state.simulation.world.on('beginContact', ({bodyA, bodyB}) => {
     if (bodyA.isWall && bodyB.isBomb) {
       if (bodyB.detonated) return
+      sounds.bombExplode.play()
       bodyB.detonated = true
       state.detonatedBombs.push([bodyB.id, ...Array.from(bodyB.position)])
       state.simulation.removeBomb(bodyB.id)
       state.spritesToRemove.push(bodyB.id)
     } else if (bodyA.isBomb && bodyB.isWall) {
       if (bodyA.detonated) return
+      sounds.bombExplode.play()
       bodyA.detonated = true
       state.detonatedBombs.push([bodyA.id, ...Array.from(bodyA.position)])
       state.simulation.removeBomb(bodyA.id)
@@ -303,8 +318,10 @@ function startClientStuff () {
   state.simulation.world.on('beginContact', ({bodyA, bodyB}) => {
     if (bodyB.isPlayer && bodyA.isWall) {
       bodyB.damping = 0.85
+      sounds.bounce.play()
     } else if (bodyA.isPlayer && bodyB.isWall) {
       bodyA.damping = 0.85
+      sounds.bounce.play()
     }
   })
 

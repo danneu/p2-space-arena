@@ -82,9 +82,18 @@ var production = {
   ],
   plugins: [
     new CopyWebpackPlugin([
-      { from: 'static/img/', to: 'img/' },
+      {
+        from: 'static/img/',
+        to: 'img/',
+        ignore: ['graphics/*']
+      },
+      { from: 'static/sounds/', to: 'sounds/' },
       { from: 'static/favicon.ico' }
-    ]),
+    ], {
+      ignore: [
+        '.DS_Store'
+      ]
+    }),
     new webpack.optimize.OccurenceOrderPlugin(),
     // extract CSS into a separate file
     new ExtractTextPlugin( './[hash].css', { allChunks: true } ),
