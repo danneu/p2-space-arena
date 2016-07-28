@@ -84,7 +84,7 @@ socket.on(':flagTaken', ([flagTeam, playerId]) => {
   }
   // check if we took it
   if (playerId === state.userId) {
-    sounds.flagTaken.play()
+    sounds.flagTakenBySelf.play()
   }
 })
 
@@ -96,6 +96,25 @@ socket.on(':flagDropped', (flagTeam) => {
     state.simulation.redCarrier = null
   } else {
     state.simulation.blueCarrier = null
+  }
+})
+
+
+socket.on(':flagCapture', (team) => {
+  console.log('[recv :flagCaptured', team)
+  // update simulation
+  // TODO: update score
+  if (team === 'RED') {
+    state.simulation.blueCarrier = null
+  } else {
+    state.simulation.redCarrier = null
+  }
+  // play sound
+  if (!state.userId) return
+  if (team === state.simulation.getPlayer(state.userId).team) {
+    sounds.friendlyCapture.play()
+  } else {
+    sounds.enemyCapture.play()
   }
 })
 

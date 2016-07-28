@@ -230,6 +230,31 @@ state.simulation.world.on('beginContact', ({bodyA, bodyB}) => {
 })
 
 
+// CHECK FOR PLAYER <-> FLAG COLLISION (FLAG SCORE)
+
+
+state.simulation.world.on('beginContact', ({bodyA, bodyB}) => {
+  let player
+  if (bodyA.isPlayer && bodyB.isFlag && bodyA.team === bodyB.team) {
+    player = state.simulation.getPlayer(bodyA.id)
+  } else if (bodyB.isPlayer && bodyA.isFlag && bodyA.team === bodyB.team) {
+    player = state.simulation.getPlayer(bodyB.id)
+  }
+  // there was no player collision with friendly flag
+  if (!player) return
+  // ignore collision if player is not a flag carrier
+  if (state.simulation.blueCarrier !== player.id && state.simulation.redCarrier !== player.id) return
+  // looks good, so lets update the simulation and broadcast flag score
+  if (player.team === 'BLUE') {
+    state.simulation.redCarrier = null
+  } else {
+    state.simulation.blueCarrier = null
+  }
+  // TODO: :flagCaptured
+  server.emit(':flagCapture', player.team)
+})
+
+
 // BROADCAST SNAPSHOT
 
 // TODO: Only broadcast the *other* players to each user.

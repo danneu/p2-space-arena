@@ -53,8 +53,22 @@ exports.bombShoot = new Howl({
 })
 
 
-exports.flagTaken = new Howl({
+exports.flagTakenBySelf = new Howl({
   src: ['./sounds/flag.mp3'],
+  volume: 0.1
+})
+
+
+// hallelujah
+exports.friendlyCapture = new Howl({
+  src: ['./sounds/bong5.mp3'],
+  volume: 0.1
+})
+
+
+// sheep
+exports.enemyCapture = new Howl({
+  src: ['./sounds/bong24.mp3'],
   volume: 0.1
 })
 
