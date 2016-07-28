@@ -49,7 +49,7 @@ socket.on(':init', (data) => {
   const {userId, map} = data
   state.userId = userId
   state.simulation = new Simulation(map)
-  // TOOD: I should just change this to renderer.init(simulation)
+  // TODO: I should just change this to renderer.init(simulation, ...)
   state.render = renderer.init({ x: map.width, y: map.height }, state.simulation.walls, state.simulation.tiles, state.simulation.redFlag, state.simulation.blueFlag)
   // Start update loop when user is ready
   setInterval(update, 1000 / 60)

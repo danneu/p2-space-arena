@@ -4,6 +4,7 @@
 const PIXI = require('pixi.js')
 // 1st
 const util = require('../common/util')
+const sprites = require('./sprites')
 
 
 // Initialize the renderer by passing in the actual map dimensions,
@@ -112,7 +113,7 @@ exports.init = function ({ x: mapX, y: mapY }, walls, tiles, redFlagPos, blueFla
 
 
   const wallWarning = (function () {
-    const message = `KNOWN ISSUE: You've tunneled outside of the map.`
+    const message = `You've tunneled outside of the map.`
     const wallWarning = new PIXI.Text(message, {
       font: '18px Arial',
       fill: 0xFF0000,
@@ -128,20 +129,9 @@ exports.init = function ({ x: mapX, y: mapY }, walls, tiles, redFlagPos, blueFla
   // TILES
 
 
-  const tileImages = [
-    './img/tile1.png',
-    './img/tile2.png',
-    './img/tile3.png'
-  ]
-
-
   for (const body of tiles) {
-    const image = util.randNth(tileImages)
-    const sprite = new PIXI.Sprite.fromImage(image)
+    const sprite = sprites.makeTile(body.tilesize)
     sprite.position.set(body.position[0], viewport.fixY(body.position[1]))
-    sprite.width = body.tilesize
-    sprite.height = body.tilesize
-    sprite.anchor.set(0.5)
     stage.addChild(sprite)
   }
 
@@ -155,138 +145,31 @@ exports.init = function ({ x: mapX, y: mapY }, walls, tiles, redFlagPos, blueFla
   }
 
 
-  // EXPLOSIONS
-
-
-  // list of movieclips
-  const explosions = {}
-
-  function makeExplosion () {
-    var tilesize = 16 * 5
-    var base = new PIXI.Texture.fromImage('./img/empburst.gif')
-    var textures = []
-    for (var i = 0; i < 2; i++) {
-      for (var j = 0; j < 5; j++) {
-        var x = j * tilesize
-        var y = i * tilesize
-        var rect = new PIXI.Rectangle(x, y, tilesize, tilesize)
-        textures.push(new PIXI.Texture(base, rect))
-      }
-    }
-    var clip = new PIXI.extras.MovieClip(textures)
-    clip.animationSpeed = 0.25
-    clip.anchor.set(0.5)
-    clip.loop = false
-    clip.scale.set(1.50)
-    clip.play()
-    return clip
-  }
-
-
   // FLAGS
 
 
-  // Trying to generalize the clip creation logic you can see in
-  // makeExplosion(). So far I'm only using this for flags but
-  // I'll try to use it for future movie clips.
-  //
-  // - tilesize: Integer
-  // - src: String, ex: './img/flags.png'
-  // - rows: Number of rows in the spritesheet
-  // - cols: Number of colums in the spritesheet
-  // - start: [x, y], coords of the starting spritesheet cell (Default: [0, 0])
-  // - end: [x, y], coords of the ending spritesheet cell (Default: botright frame)
-  // - clipOpts is optional object for configuring PIXI clip of {
-  //   loop: Bool, (Default: false)
-  //   animationSpeed: 0.0 - 1.0, (Default: 1.0)
-  //   scale: Float (Default: 1.0)
-  // }
-  //
-  // TODO: Move to another file. renderer.js is getting big...
-  function clipFactory ({ tilesize, src, rows, cols, start, end, clipOpts }) {
-    const { animationSpeed, scale, loop } = clipOpts
-    const [startRow, startCol] = start || [0, 0]
-    const [endRow, endCol] = end || [cols - 1, rows - 1]
-    const base = new PIXI.Texture.fromImage(src)
-    let textures = []
-    for (var col = startCol; col <= endCol; col++) {
-      for (var row = startRow; row <= endRow; row++) {
-        var x = row * tilesize
-        var y = col * tilesize
-        var rect = new PIXI.Rectangle(x, y, tilesize, tilesize)
-        textures.push(new PIXI.Texture(base, rect))
-      }
-    }
-    const clip = new PIXI.extras.MovieClip(textures)
-    clip.anchor.set(0.5)
-    clip.loop = !!loop
-    if (animationSpeed) clip.animationSpeed = animationSpeed
-    if (scale) clip.scale.set(scale)
-    clip.play()
-    return clip
-  }
-
-
-  // Returns PIXI.Container
-  const makeFlag = (function () {
-    function makeFlagClip (team) {
-      const common = {
-        tilesize: 16, rows: 2, cols: 10, src: './img/flags.png',
-        clipOpts: { loop: true, animationSpeed: 0.3 }
-      }
-      if (team === 'BLUE') {
-        return clipFactory(Object.assign({}, common, { start: [0, 0], end: [9, 0] }))
-      } else {
-        return clipFactory(Object.assign({}, common, { start: [0, 1], end: [9, 1] }))
-      }
-    }
-    return function (team) {
-      const container = new PIXI.Container()
-      const clip = makeFlagClip(team)
-      const glow = (function () {
-        // TODO: how small can the gradient image get without losing fade quality?
-        const sprite = new PIXI.Sprite.fromImage('./img/circle-gradient16.png')
-        sprite.tint = team === 'RED' ? colors.red : colors.blue
-        sprite.width = 256
-        sprite.height = 256
-        sprite.anchor.set(0.5)
-        return sprite
-      })()
-      container.addChild(glow)
-      container.addChild(clip)
-      return container
-    }
-  })()
-
-
-  const redFlag = makeFlag('RED')
+  const redFlag = sprites.makeFlag('RED', colors.red)
   redFlag.position.x = redFlagPos[0]
   redFlag.position.y = viewport.fixY(redFlagPos[1])
   stage.addChild(redFlag)
 
-  const blueFlagClip = makeFlag('BLUE')
+  const blueFlagClip = sprites.makeFlag('BLUE', colors.blue)
   blueFlagClip.position.x = blueFlagPos[0]
   blueFlagClip.position.y = viewport.fixY(blueFlagPos[1])
   stage.addChild(blueFlagClip)
 
 
-  // SHIP EXPLOSIONS
+  // EXPLOSIONS
+  //
+  // Active movieclips are maintained in two maps.
+  // On every render, we remove any movieclips that
+  // are on their last frame.
 
 
   // Map of playerId -> PIXI.MovieClip
   const shipExplosions = {}
-
-
-  // Returns PIXI.MovieClip
-  function makeShipExplosion () {
-    return clipFactory({
-      tilesize: 48,
-      rows: 6,
-      cols: 6,
-      src: './img/explode1.png',
-      clipOpts: {loop: false, animationSpeed: 0.3}
-    })
-  }
+  // Map of bombId -> PIXI.MovieClip
+  const bombExplosions = {}
 
 
   // ENERGY BAR
@@ -356,21 +239,21 @@ exports.init = function ({ x: mapX, y: mapY }, walls, tiles, redFlagPos, blueFla
 
 
   return function render (simulation, currUserId, spritesToRemove, detonatedBombs, killedPlayers) {
-    // Update / decay / destroy existing explosions
-    for (const id in explosions) {
-      const clip = explosions[id]
+    // Update / decay / destroy existing bob explosions
+    for (const id in bombExplosions) {
+      const clip = bombExplosions[id]
       // if clip is at final frame, destroy it
       if (clip.currentFrame === clip.totalFrames - 1) {
         stage.removeChild(clip)
         clip.destroy()
-        delete explosions[id]
+        delete bombExplosions[id]
       }
     }
     // Create bomb explosions
     for (const [id, x, y] of detonatedBombs) {
-      const clip = makeExplosion()
+      const clip = sprites.makeBombExplosion()
       clip.position.set(x, viewport.fixY(y))
-      explosions[id] = clip
+      bombExplosions[id] = clip
       stage.addChild(clip)
     }
     // DECAY / REMOVE SHIP EXPLOSIONS
@@ -385,7 +268,7 @@ exports.init = function ({ x: mapX, y: mapY }, walls, tiles, redFlagPos, blueFla
     }
     // CREATE SHIP EXPLOSIONS
     for (const player of killedPlayers) {
-      const clip = makeShipExplosion()
+      const clip = sprites.makeShipExplosion()
       clip.position.set(player.body.position[0],
                         viewport.fixY(player.body.position[1]))
       shipExplosions[player.id] = clip
@@ -424,6 +307,7 @@ exports.init = function ({ x: mapX, y: mapY }, walls, tiles, redFlagPos, blueFla
         }
       } else {
         // player sprite must be created
+        // TODO: Relocate to sprites.js
         const [x, y] = Array.from(player.body.position)
         const container = new PIXI.Container()
         // container children (the ship sprite and the username)
@@ -471,11 +355,8 @@ exports.init = function ({ x: mapX, y: mapY }, walls, tiles, redFlagPos, blueFla
         sprite.position.set(x, viewport.fixY(y))
       } else {
         // sprite does not exist, so create it
-        const sprite = new PIXI.Sprite.fromImage('./img/bomb.png')
-        sprite.anchor.set(0.5)
-        sprite.height = 18
-        sprite.width = 18
         const [x, y] = Array.from(bomb.body.position)
+        const sprite = sprites.makeBomb()
         sprite.position.set(x, viewport.fixY(y))
         state.sprites[id] = sprite
         stage.addChild(sprite)
