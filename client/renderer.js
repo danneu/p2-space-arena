@@ -227,25 +227,44 @@ exports.init = function ({ x: mapX, y: mapY }, walls, tiles, redFlagPos, blueFla
   }
 
 
-  function makeFlagClip (team) {
-    const common = {
-      tilesize: 16, rows: 2, cols: 10, src: './img/flags.png',
-      clipOpts: { loop: true, animationSpeed: 0.3 }
+  // Returns PIXI.Container
+  const makeFlag = (function () {
+    function makeFlagClip (team) {
+      const common = {
+        tilesize: 16, rows: 2, cols: 10, src: './img/flags.png',
+        clipOpts: { loop: true, animationSpeed: 0.3 }
+      }
+      if (team === 'BLUE') {
+        return clipFactory(Object.assign({}, common, { start: [0, 0], end: [9, 0] }))
+      } else {
+        return clipFactory(Object.assign({}, common, { start: [0, 1], end: [9, 1] }))
+      }
     }
-    if (team === 'BLUE') {
-      return clipFactory(Object.assign({}, common, { start: [0, 0], end: [9, 0] }))
-    } else {
-      return clipFactory(Object.assign({}, common, { start: [0, 1], end: [9, 1] }))
+    return function (team) {
+      const container = new PIXI.Container()
+      const clip = makeFlagClip(team)
+      const glow = (function () {
+        // TODO: how small can the gradient image get without losing fade quality?
+        const sprite = new PIXI.Sprite.fromImage('./img/circle-gradient16.png')
+        sprite.tint = team === 'RED' ? colors.red : colors.blue
+        sprite.width = 256
+        sprite.height = 256
+        sprite.anchor.set(0.5)
+        return sprite
+      })()
+      container.addChild(glow)
+      container.addChild(clip)
+      return container
     }
-  }
+  })()
 
 
-  const redFlagClip = makeFlagClip('RED')
-  redFlagClip.position.x = redFlagPos[0]
-  redFlagClip.position.y = viewport.fixY(redFlagPos[1])
-  stage.addChild(redFlagClip)
+  const redFlag = makeFlag('RED')
+  redFlag.position.x = redFlagPos[0]
+  redFlag.position.y = viewport.fixY(redFlagPos[1])
+  stage.addChild(redFlag)
 
-  const blueFlagClip = makeFlagClip('BLUE')
+  const blueFlagClip = makeFlag('BLUE')
   blueFlagClip.position.x = blueFlagPos[0]
   blueFlagClip.position.y = viewport.fixY(blueFlagPos[1])
   stage.addChild(blueFlagClip)
