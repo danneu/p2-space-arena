@@ -282,7 +282,7 @@ exports.init = function ({ x: mapX, y: mapY }, walls, tiles, redFlagPos, blueFla
   // RENDER
 
 
-  return function render (simulation, currUserId, spritesToRemove, detonatedBombs, killedPlayers) {
+  return function render (simulation, currUserId, spritesToRemove, detonatedBombs, killedPlayers, showHitbox) {
     // UPDATE FLAG SPAWNS
     if (simulation.redCarrier) {
       redFlag.visible = false
@@ -365,6 +365,13 @@ exports.init = function ({ x: mapX, y: mapY }, walls, tiles, redFlagPos, blueFla
           } else {
             wallWarning.visible = false
           }
+          // check for show-hitbox change
+          // FIXME: don't rely on container.getChildAt(3) to be hitbox
+          if (showHitbox && !container.getChildAt(3).visible) {
+            container.getChildAt(3).visible = true
+          } else if (!showHitbox && container.getChildAt(3).visible) {
+            container.getChildAt(3).visible = false
+          }
           // update energy bar
           if (container.energyBar) {
             const scalar = player.curEnergy / player.maxEnergy
@@ -411,6 +418,13 @@ exports.init = function ({ x: mapX, y: mapY }, walls, tiles, redFlagPos, blueFla
           container.addChild(energyBar)
           container.energyBar = energyBar
         }
+        // Add hitbox visualization
+        const hitbox = new PIXI.Graphics()
+        hitbox.lineStyle(1, 0xFFFFFF)
+        hitbox.drawCircle(sprite.position.x, sprite.position.y, 15)
+        hitbox.visible = false
+        container.addChild(hitbox)
+        // Add to stage
         state.sprites[id] = container
         stage.addChild(container)
       }

@@ -30,7 +30,9 @@ const state = {
   detonatedBombs: [],
   // players killed this frame, will turn into explosions by
   // the render step
-  killedPlayers: []
+  killedPlayers: [],
+  // modified by HUD's #show-hitbox checkbox
+  showHitbox: false
 }
 
 
@@ -292,7 +294,7 @@ let frameDurations = []
 
 function renderLoop (now) {
   requestAnimationFrame(renderLoop)
-  state.render(state.simulation, state.userId, state.spritesToRemove, state.detonatedBombs, state.killedPlayers)
+  state.render(state.simulation, state.userId, state.spritesToRemove, state.detonatedBombs, state.killedPlayers, state.showHitbox)
   state.detonatedBombs = []
   state.spritesToRemove = []
   state.killedPlayers = []
@@ -484,4 +486,14 @@ function startClientStuff () {
     // Clear keys pressed when game loses focus
     keysDown = { up: false, down: false, left: false, right: false, bomb: false }
   }
+})()
+
+
+// TRACK #show-hitbox CHECKBOX
+
+;(function () {
+  const node = document.querySelector('#show-hitbox')
+  node.addEventListener('change', function (e) {
+    state.showHitbox = e.target.checked
+  })
 })()
