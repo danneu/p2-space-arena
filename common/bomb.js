@@ -35,9 +35,9 @@ function Bomb (id, userId, team, position, velocity) {
     /* body.sensor = true*/
     const shape = new p2.Circle({ radius: 3 })
     shape.collisionGroup = Group.Bomb[team]
-    // Bombs only collide with walls and players of the other team
     console.log('%s bomb msk should be targetting %s', team, util.flipTeam(team))
-    shape.collisionMask = Group.WALL | Group.Player[util.flipTeam(team)]
+    const otherTeam = util.flipTeam(team)
+    shape.collisionMask = Group.WALL | Group.Player[otherTeam] | Group.Filter[otherTeam]
     body.addShape(shape)
     body.velocity = velocity
     body.isBomb = true

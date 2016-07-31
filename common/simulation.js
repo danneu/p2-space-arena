@@ -28,8 +28,7 @@ function makeWall (id, x, y, angle) {
   const shape = new p2.Plane()
   shape.material = Material.wall
   shape.collisionGroup = Group.WALL
-  // Walls collide with everything except walls
-  shape.collisionMask = Group.ALL ^ Group.WALL
+  shape.collisionMask = Group.Player.ANY | Group.Bomb.ANY
   body.addShape(shape)
   body.position = [x, y]
   body.isWall = true
@@ -47,7 +46,23 @@ function makeTile (tilesize, x, y) {
   shape.material = Material.wall
   // Walls collide with everything except walls
   shape.collisionGroup = Group.WALL
-  shape.collisionMask = Group.ALL ^ Group.WALL
+  shape.collisionMask = Group.Player.ANY | Group.Bomb.ANY
+  body.addShape(shape)
+  return body
+}
+
+
+function makeFilter (team, tilesize, x, y) {
+  const body = new p2.Body()
+  body.isWall = true // get picked up by our beginContact wall/bomb check
+  body.position = [x, y]
+  body.tilesize = tilesize
+  const shape = new p2.Box({ width: tilesize, height: tilesize })
+  shape.material = Material.wall
+  shape.collisionGroup = Group.Filter[team]
+  // Filters only collide with the other team
+  const otherTeam = util.flipTeam(team)
+  shape.collisionMask = Group.Player[otherTeam] | Group.Bomb[otherTeam]
   body.addShape(shape)
   return body
 }
@@ -89,7 +104,8 @@ function Simulation ({
     // array of [x, y] spawn points
     redSpawns = [], blueSpawns = [],
     // these are optional
-    redCarrier = null, blueCarrier = null
+    redCarrier = null, blueCarrier = null,
+    filters = { RED: [], BLUE: [] }
   }) {
   console.assert(Number.isInteger(width))
   console.assert(Number.isInteger(height))
@@ -121,6 +137,16 @@ function Simulation ({
   for (const body of [top, bottom, left, right]) {
     this.world.addBody(body)
   }
+  // FILTERS - Tiles that only one team can enter
+  filters.RED.forEach(([x, y]) => {
+    const body = makeFilter('RED', tilesize, x, y)
+    this.world.addBody(body)
+  })
+  filters.BLUE.forEach(([x, y]) => {
+    const body = makeFilter('BLUE', tilesize, x, y)
+    this.world.addBody(body)
+  })
+  this.filters = filters
   // TILES
   this.tiles = tiles.map(([x, y]) => makeTile(tilesize, x, y))
   this.tiles.forEach((body) => this.world.addBody(body))
@@ -334,7 +360,9 @@ Simulation.prototype.toSnapshot = function () {
 // r = red flag
 // b = blue flag
 // > = red spawn
+// ( = red filter (only red can pass/shoot thru
 // < = blue spawn
+// ) = blue filter
 // if a team doesn't have a spawn, their players will spawn randomly
 // on their half of the map
 Simulation.fromData = function (tilesize, data) {
@@ -348,6 +376,7 @@ Simulation.fromData = function (tilesize, data) {
   let blueFlag
   let redSpawns = []
   let blueSpawns = []
+  const filters = { RED: [], BLUE: [] }
   for (let row = 0; row < data.length; row++) {
     for (let col = 0; col < data[0].length; col++) {
       // short-circuit on empty spaces
@@ -355,15 +384,20 @@ Simulation.fromData = function (tilesize, data) {
       // Everything is anchored at its center
       const x = col * tilesize + tilesize / 2
       const y = row * tilesize + tilesize / 2
-      if (data[row][col] === 'X') {
+      const cell = data[row][col]
+      if (cell === 'X') {
         tiles.push([x, y])
-      } else if (data[row][col] === 'r') {
+      } else if (cell === '(') {
+        filters.RED.push([x, y])
+      } else if (cell === ')') {
+        filters.BLUE.push([x, y])
+      } else if (cell === 'r') {
         redFlag = [x, y]
-      } else if (data[row][col] === 'b') {
+      } else if (cell === 'b') {
         blueFlag = [x, y]
-      } else if (data[row][col] === '>') {
+      } else if (cell === '>') {
         redSpawns.push([x, y])
-      } else if (data[row][col] === '<') {
+      } else if (cell === '<') {
         blueSpawns.push([x, y])
       }
     }
@@ -382,7 +416,7 @@ Simulation.fromData = function (tilesize, data) {
   console.log('- blueSpawns: %s', blueSpawns.length)
   return new Simulation({
     width, height, tiles, tilesize, redFlag, blueFlag,
-    redSpawns, blueSpawns
+    redSpawns, blueSpawns, filters
   })
 }
 

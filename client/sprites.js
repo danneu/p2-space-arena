@@ -186,3 +186,15 @@ exports.makeFlagCarrierGlow = function (tint) {
   sprite.visible = false
   return sprite
 }
+
+
+// y should already be flipped
+exports.makeFilter = function (tilesize, x, yi, tint) {
+  const sprite = new PIXI.Sprite.fromImage('./img/filter.png')
+  sprite.tint = tint
+  sprite.anchor.set(0.5)
+  sprite.position.set(x, yi)
+  sprite.width = tilesize
+  sprite.height = tilesize
+  return sprite
+}

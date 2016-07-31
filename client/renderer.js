@@ -9,7 +9,7 @@ const sprites = require('./sprites')
 
 // Initialize the renderer by passing in the actual map dimensions,
 // which is different from the viewport dimensions.
-exports.init = function ({ x: mapX, y: mapY }, walls, tiles, redFlagPos, blueFlagPos, onStageClick) {
+exports.init = function ({ x: mapX, y: mapY }, tilesize, walls, tiles, filters, redFlagPos, blueFlagPos, onStageClick) {
   console.assert(Array.isArray(walls))
   console.assert(Array.isArray(tiles))
   console.assert(Array.isArray(redFlagPos))
@@ -132,6 +132,14 @@ exports.init = function ({ x: mapX, y: mapY }, walls, tiles, redFlagPos, blueFla
   })()
 
 
+  // TEAM COLORS
+
+
+  const colors = {
+    red: 0xFFBBBB,
+    blue: 0xA8CFFF
+  }
+
   // TILES
 
 
@@ -142,13 +150,19 @@ exports.init = function ({ x: mapX, y: mapY }, walls, tiles, redFlagPos, blueFla
   }
 
 
-  // TEAM COLORS
+  // FILTERS
 
 
-  const colors = {
-    red: 0xFFBBBB,
-    blue: 0xA8CFFF
+  for (const [x, y] of filters.RED) {
+    const sprite = sprites.makeFilter(tilesize, x, viewport.fixY(y), colors.red)
+    stage.addChild(sprite)
   }
+
+  for (const [x, y] of filters.BLUE) {
+    const sprite = sprites.makeFilter(tilesize, x, viewport.fixY(y), colors.blue)
+    stage.addChild(sprite)
+  }
+
 
 
   // FLAGS
