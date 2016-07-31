@@ -94,7 +94,6 @@ Player.prototype.enforceMaxSpeed = function () {
   const len = vec2.length(this.body.velocity)
   if (len > this.maxSpeed) {
     vec2.scale(this.body.velocity, this.body.velocity, this.maxSpeed / len)
-    console.log('postenforce', vec2.length(this.body.velocity))
   }
 }
 
