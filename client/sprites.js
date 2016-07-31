@@ -186,3 +186,12 @@ exports.makeFlagCarrierGlow = function (tint) {
   sprite.visible = false
   return sprite
 }
+
+
+exports.makeCollisionPolygon = function (vertices) {
+  const gfx = new PIXI.Graphics()
+  gfx.beginFill(0xFFFFFF)
+  gfx.drawPolygon([].concat.apply([], vertices))
+  gfx.endFill()
+  return gfx
+}

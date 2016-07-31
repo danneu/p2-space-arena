@@ -81,27 +81,25 @@ function makeFlag (team, position) {
 // SIMULATION
 
 
-// tiles is array of positions [[x, y], ...]
 function Simulation ({
-    width, height, tiles, tilesize,
+    width, height,
     // each is an [x, y] position
-    redFlag, blueFlag,
+    redFlag = [], blueFlag = [],
     // array of [x, y] spawn points
     redSpawns = [], blueSpawns = [],
     // these are optional
-    redCarrier = null, blueCarrier = null
+    redCarrier = null, blueCarrier = null,
+    // map data, polygons is an array(array [x, y])
+    polygons
   }) {
   console.assert(Number.isInteger(width))
   console.assert(Number.isInteger(height))
-  console.assert(Number.isInteger(tilesize))
-  console.assert(Array.isArray(tiles))
   console.assert(Array.isArray(redFlag))
   console.assert(Array.isArray(blueFlag))
   console.assert(Array.isArray(redSpawns))
   console.assert(Array.isArray(blueSpawns))
   this.width = width
   this.height = height
-  this.tilesize = tilesize
   this.world = (function () {
     const world = new p2.World()
     world.applyGravity = false
@@ -122,8 +120,29 @@ function Simulation ({
     this.world.addBody(body)
   }
   // TILES
-  this.tiles = tiles.map(([x, y]) => makeTile(tilesize, x, y))
-  this.tiles.forEach((body) => this.world.addBody(body))
+    /* this.tiles = tiles.map(([x, y]) => makeTile(tilesize, x, y))
+     * this.tiles.forEach((body) => this.world.addBody(body))*/
+  // COLLISION POLYGONS
+  this.polygons = polygons // for broadcast
+  polygons.forEach((vertices) => {
+    const body = new p2.Body()
+    body.isWall = true
+    try {
+        body.fromPolygon(vertices)
+    } catch (err) {
+      if (/Convex vertices/.test(err.message)) {
+        body.fromPolygon(vertices.reverse())
+      } else {
+        throw err
+      }
+    }
+    body.shapes.forEach((shape) => {
+      shape.material = Material.wall
+      shape.collisionGroup = Group.WALL
+      shape.collisionMask = Group.Player.ANY | Group.Bomb.ANY
+    })
+    this.world.addBody(body)
+  })
   // SPAWNS
   this.redSpawns = redSpawns
   this.blueSpawns = blueSpawns
@@ -329,6 +348,23 @@ Simulation.prototype.toSnapshot = function () {
 // STATIC
 
 
+Simulation.fromGeoJson = function (json) {
+  // each group is an array of [x, y] pairs
+  let polygons = []
+  json.features.forEach((feature) => {
+    feature.geometry.coordinates.forEach((coords) => {
+      polygons.push(coords)
+    })
+  })
+
+  return new Simulation({
+    polygons,
+    width: 1200,
+    height: 800
+  })
+}
+
+
 // . = empty
 // X = wall
 // r = red flag
@@ -337,7 +373,7 @@ Simulation.prototype.toSnapshot = function () {
 // < = blue spawn
 // if a team doesn't have a spawn, their players will spawn randomly
 // on their half of the map
-Simulation.fromData = function (tilesize, data) {
+Simulation.fromTextData = function (tilesize, data) {
   console.assert(Number.isInteger(tilesize))
   console.assert(Array.isArray(data))
   data = data.reverse()

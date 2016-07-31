@@ -53,7 +53,7 @@ socket.on(':init', (data) => {
   state.userId = userId
   state.simulation = new Simulation(map)
   // TODO: I should just change this to renderer.init(simulation, ...)
-  state.render = renderer.init({ x: map.width, y: map.height }, state.simulation.walls, state.simulation.tiles, Array.from(state.simulation.redFlag.position), Array.from(state.simulation.blueFlag.position), onStageClick)
+  state.render = renderer.init({ x: map.width, y: map.height }, state.simulation.walls, state.simulation.polygons, Array.from(state.simulation.redFlag.position), Array.from(state.simulation.blueFlag.position), onStageClick)
   // Start update loop when user is ready
   setInterval(update, 1000 / 60)
   requestAnimationFrame(renderLoop)

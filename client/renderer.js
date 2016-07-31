@@ -9,9 +9,9 @@ const sprites = require('./sprites')
 
 // Initialize the renderer by passing in the actual map dimensions,
 // which is different from the viewport dimensions.
-exports.init = function ({ x: mapX, y: mapY }, walls, tiles, redFlagPos, blueFlagPos, onStageClick) {
+exports.init = function ({ x: mapX, y: mapY }, walls, polygons, redFlagPos, blueFlagPos, onStageClick) {
   console.assert(Array.isArray(walls))
-  console.assert(Array.isArray(tiles))
+  console.assert(Array.isArray(polygons))
   console.assert(Array.isArray(redFlagPos))
   console.assert(Array.isArray(blueFlagPos))
 
@@ -132,15 +132,25 @@ exports.init = function ({ x: mapX, y: mapY }, walls, tiles, redFlagPos, blueFla
   })()
 
 
+  // COLLISION MAP
+
+
+  polygons.forEach((vertices) => {
+    const fixed = vertices.map(([x, y]) => [x, viewport.fixY(y)])
+    const gfx = sprites.makeCollisionPolygon(fixed)
+    stage.addChild(gfx)
+  })
+
+
   // TILES
 
 
-  for (const body of tiles) {
-    const sprite = sprites.makeTile(body.tilesize)
-    sprite.position.set(body.position[0], viewport.fixY(body.position[1]))
-    stage.addChild(sprite)
-  }
-
+  /* for (const body of tiles) {
+   *   const sprite = sprites.makeTile(body.tilesize)
+   *   sprite.position.set(body.position[0], viewport.fixY(body.position[1]))
+   *   stage.addChild(sprite)
+   * }
+   */
 
   // TEAM COLORS
 

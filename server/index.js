@@ -19,12 +19,13 @@ const Bomb = require('../common/bomb')
 
 
 // Load map from file
-const map1 = fs.readFileSync(path.join(__dirname, '../map1.txt'), 'utf8')
-  .split('\n')
-  .filter(Boolean)
+/* const map1 = fs.readFileSync(path.join(__dirname, '../map1.txt'), 'utf8')
+ *   .split('\n')
+ *   .filter(Boolean)
+ * */
 
 const state = {
-  simulation: Simulation.fromData(32, map1),
+  simulation: Simulation.fromGeoJson(require('../common/map1.json')),
   startTime: Date.now()
 }
 
@@ -68,8 +69,7 @@ server.on('connection', (socket) => {
     map: {
       width: state.simulation.width,
       height: state.simulation.height,
-      tilesize: state.simulation.tilesize,
-      tiles: state.simulation.tiles.map((body) => Array.from(body.position)),
+      polygons: state.simulation.polygons,
       redFlag: Array.from(state.simulation.redFlag.position),
       blueFlag: Array.from(state.simulation.blueFlag.position),
       redCarrier: state.simulation.redCarrier,
