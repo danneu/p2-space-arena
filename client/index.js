@@ -5,6 +5,7 @@ const io = require('socket.io-client')
 const vec2 = require('p2').vec2
 // 1st
 const util = require('../common/util')
+const { pxm, mxp } = util
 const Simulation = require('../common/simulation')
 const Player = require('../common/player')
 const Bomb = require('../common/bomb')
@@ -278,8 +279,10 @@ function update () {
 function onStageClick ({x, y: yi}) {
   if (!state.userId) return
   // convert back to p2 coords
-  const y = state.simulation.height - yi
-  state.simulation.getPlayer(state.userId).body.position = [x, y]
+  const y = mxp(state.simulation.height) - yi
+  const player = state.simulation.getPlayer(state.userId)
+  player.body.position = [pxm(x), pxm(y)]
+  vec2.scale(player.body.velocity, player.body.velocity, 0.60)
 }
 
 
@@ -375,39 +378,6 @@ function startClientStuff () {
     player.enforceMaxSpeed()
   })
 
-
-  // HANDLE {BOMB,PLAYER}<-> DIODE CONTACT
-
-
-  /* state.simulation.world.on('postBroadphase', ({pairs}) => {
-   *   for (let i = 0; i < pairs.length; i += 2) {
-   *     if (pairs[i].isDiode || pairs[i + 1].isDiode) {
-   *       let diodeIdx = pairs[i].isDiode ? i : i + 1
-   *       let colliderIdx = pairs[i].isDiode ? i + 1 : i
-   *       // check if collider is moving against diode direction
-   *       let collides
-   *       switch (pairs[diodeIdx].isDiode) {
-   *         case 'UP':
-   *           collides = pairs[colliderIdx].velocity[1] < 0
-   *           break
-   *         case 'DOWN':
-   *           collides = pairs[colliderIdx].velocity[1] > 0
-   *           break
-   *         case 'LEFT':
-   *           collides = pairs[colliderIdx].velocity[0] > 0
-   *           break
-   *         case 'RIGHT':
-   *           collides = pairs[colliderIdx].velocity[0] < 0
-   *           break
-   *       }
-   *       console.log('collides', collides)
-   *       if (!collides) {
-   *         pairs.splice(Math.min(diodeIdx, colliderIdx), 2)
-   *       }
-   *     }
-   *   }
-   * })
-   */
 
   state.simulation.world.on('beginContact', ({bodyA, bodyB}) => {
     if ((bodyA.isDiode || bodyB.isDiode) && (bodyA.isBomb || bodyB.isBomb)) {

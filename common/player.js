@@ -7,6 +7,7 @@ const faker = require('faker')
 const Material = require('./material')
 const Group = require('./CollisionGroup')
 const util = require('./util')
+const { pxm } = util
 
 
 module.exports = Player
@@ -24,23 +25,19 @@ function Player (id, team, position, angle) {
   this.maxEnergy = 1500
   this.curEnergy = this.maxEnergy
   // Per seconds
-  this.maxSpeed = 200 // speed is a persecond measurement
+  this.maxSpeed = pxm(200) // speed is a persecond measurement
   this.energyPerSecond = 500
   this.turnSpeed = Math.PI // rad per second
-  this.thrust =  200
+  this.thrust =  pxm(200)
   // The player's clamped angle in degrees. Use this for game logic,
   // like when calculating the trajectory of the bomb they're shooting.
   this.deg = util.rad2deg(angle || 0)
   this.body = (function() {
-    const body = new p2.Body({
-      id,
-      mass: 1,
-      position: position || [100, 100]
-    })
+    const body = new p2.Body({ id, mass: 1, position })
     body.isPlayer = true
     // TODO: graphic radius is 15, but seems best to make collision
     // radius a lil smaller for wall collisions, but not bomb collisions.
-    const shape = new p2.Circle({ radius: 15 })
+    const shape = new p2.Circle({ radius: pxm(15) })
     const otherTeam = util.flipTeam(team)
     shape.collisionGroup = Group.Player[team]
     shape.collisionMask = Group.Flag.ANY

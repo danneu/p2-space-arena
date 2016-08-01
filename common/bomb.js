@@ -8,6 +8,7 @@ const Physics = require('./physics')
 const Uuid = require('./uuid')
 const Group = require('./CollisionGroup')
 const util = require('./util')
+const { pxm } = util
 
 
 module.exports = Bomb
@@ -33,7 +34,7 @@ function Bomb (id, userId, team, position, velocity) {
     body.collisionResponse = false
     // only triggers on overlap FIXME: this belongs on shape
     /* body.sensor = true*/
-    const shape = new p2.Circle({ radius: 3 })
+    const shape = new p2.Circle({ radius: pxm(3) })
     shape.collisionGroup = Group.Bomb[team]
     console.log('%s bomb msk should be targetting %s', team, util.flipTeam(team))
     const otherTeam = util.flipTeam(team)
@@ -62,7 +63,7 @@ Bomb.fromPlayer = function (player) {
   const id = Uuid.generate()
   const position = Physics.nose(player.body)
   const velocity = vec2.create()
-  vec2.rotate(velocity, vec2.fromValues(0, 300), -util.deg2rad(player.deg))
+  vec2.rotate(velocity, vec2.fromValues(0, pxm(300)), -util.deg2rad(player.deg))
   vec2.add(velocity, player.body.velocity, velocity)
   return new Bomb(id, player.id, player.team, position, velocity)
 }

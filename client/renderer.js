@@ -4,6 +4,7 @@
 const PIXI = require('pixi.js')
 // 1st
 const util = require('../common/util')
+const { mxp } = util
 const sprites = require('./sprites')
 
 
@@ -36,7 +37,7 @@ exports.init = function ({ x: mapX, y: mapY }, tilesize, walls, tiles, filters, 
     y: null,
     // Converts p2 y to pixi y
     fixY (y) {
-      return mapY - y
+      return mxp(mapY) - y
     },
     reset () {
       this.x = document.documentElement.clientWidth
@@ -75,8 +76,8 @@ exports.init = function ({ x: mapX, y: mapY }, tilesize, walls, tiles, filters, 
     //const texture = PIXI.Texture.fromImage('./img/starfield.jpg')
     const texture = PIXI.Texture.fromImage('./img/bg.jpg')
     const sprite = new PIXI.extras.TilingSprite(texture)
-    sprite.height = mapY
-    sprite.width = mapX
+    sprite.height = mxp(mapY)
+    sprite.width = mxp(mapX)
     return sprite
   })()
   stage.addChild(bg)
@@ -92,29 +93,29 @@ exports.init = function ({ x: mapX, y: mapY }, tilesize, walls, tiles, filters, 
   gfx = new PIXI.Graphics() // top, red
   gfx.beginFill(0x000000)
   gfx.lineStyle(5, 0xFF0000)
-  gfx.moveTo(-viewport.x * 2, viewport.fixY(top.position[1]))
-  gfx.lineTo(viewport.x * 2, viewport.fixY(top.position[1]))
+  gfx.moveTo(-viewport.x * 2, viewport.fixY(mxp(top.position[1])))
+  gfx.lineTo(viewport.x * 2, viewport.fixY(mxp(top.position[1])))
   stage.addChild(gfx)
 
   gfx = new PIXI.Graphics() // bottom, orange
   gfx.beginFill(0x000000)
   gfx.lineStyle(5, 0xFFA500)
-  gfx.moveTo(-viewport.x * 2, viewport.fixY(bot.position[1]))
-  gfx.lineTo(viewport.x * 2, viewport.fixY(bot.position[1]))
+  gfx.moveTo(-viewport.x * 2, viewport.fixY(mxp(bot.position[1])))
+  gfx.lineTo(viewport.x * 2, viewport.fixY(mxp(bot.position[1])))
   stage.addChild(gfx)
 
   gfx = new PIXI.Graphics() // left, blue
   gfx.beginFill(0x000000)
   gfx.lineStyle(5, 0x0000FF)
-  gfx.moveTo(left.position[0], -viewport.y * 2)
-  gfx.lineTo(left.position[0], viewport.y * 2)
+  gfx.moveTo(mxp(left.position[0]), -viewport.y * 2)
+  gfx.lineTo(mxp(left.position[0]), viewport.y * 2)
   stage.addChild(gfx)
 
   gfx = new PIXI.Graphics() // right, green
   gfx.beginFill(0x000000)
   gfx.lineStyle(5, 0x00FF00)
-  gfx.moveTo(right.position[0], -viewport.y * 2)
-  gfx.lineTo(right.position[0], viewport.y * 2)
+  gfx.moveTo(mxp(right.position[0]), -viewport.y * 2)
+  gfx.lineTo(mxp(right.position[0]), viewport.y * 2)
   stage.addChild(gfx)
 
 
@@ -144,8 +145,8 @@ exports.init = function ({ x: mapX, y: mapY }, tilesize, walls, tiles, filters, 
 
 
   for (const body of tiles) {
-    const sprite = sprites.makeTile(body.tilesize)
-    sprite.position.set(body.position[0], viewport.fixY(body.position[1]))
+    const sprite = sprites.makeTile(mxp(body.tilesize))
+    sprite.position.set(mxp(body.position[0]), viewport.fixY(mxp(body.position[1])))
     stage.addChild(sprite)
   }
 
@@ -154,12 +155,12 @@ exports.init = function ({ x: mapX, y: mapY }, tilesize, walls, tiles, filters, 
 
 
   for (const [x, y] of filters.RED) {
-    const sprite = sprites.makeFilter(tilesize, x, viewport.fixY(y), colors.red)
+    const sprite = sprites.makeFilter(mxp(tilesize), mxp(x), viewport.fixY(mxp(y)), colors.red)
     stage.addChild(sprite)
   }
 
   for (const [x, y] of filters.BLUE) {
-    const sprite = sprites.makeFilter(tilesize, x, viewport.fixY(y), colors.blue)
+    const sprite = sprites.makeFilter(mxp(tilesize), mxp(x), viewport.fixY(mxp(y)), colors.blue)
     stage.addChild(sprite)
   }
 
@@ -167,7 +168,7 @@ exports.init = function ({ x: mapX, y: mapY }, tilesize, walls, tiles, filters, 
   // DIODES
 
   for (const [direction, x, y] of diodes) {
-    const sprite = sprites.makeDiode(tilesize, direction, x, viewport.fixY(y))
+    const sprite = sprites.makeDiode(mxp(tilesize), direction, mxp(x), viewport.fixY(mxp(y)))
     stage.addChild(sprite)
   }
 
@@ -176,13 +177,13 @@ exports.init = function ({ x: mapX, y: mapY }, tilesize, walls, tiles, filters, 
 
 
   const redFlag = sprites.makeFlag('RED', colors.red)
-  redFlag.position.x = redFlagPos[0]
-  redFlag.position.y = viewport.fixY(redFlagPos[1])
+  redFlag.position.x = mxp(redFlagPos[0])
+  redFlag.position.y = viewport.fixY(mxp(redFlagPos[1]))
   stage.addChild(redFlag)
 
   const blueFlag = sprites.makeFlag('BLUE', colors.blue)
-  blueFlag.position.x = blueFlagPos[0]
-  blueFlag.position.y = viewport.fixY(blueFlagPos[1])
+  blueFlag.position.x = mxp(blueFlagPos[0])
+  blueFlag.position.y = viewport.fixY(mxp(blueFlagPos[1]))
   stage.addChild(blueFlag)
 
   // These markers become visible when a flag is taken
@@ -194,7 +195,7 @@ exports.init = function ({ x: mapX, y: mapY }, tilesize, walls, tiles, filters, 
       align: 'center'
     })
     text.anchor.set(0.5)
-    text.position = redFlag.position
+    text.position = [mxp(redFlag.position[0]), mxp(redFlag.position[1])]
     text.visible = false
     return text
   })()
@@ -207,7 +208,7 @@ exports.init = function ({ x: mapX, y: mapY }, tilesize, walls, tiles, filters, 
       align: 'center'
     })
     text.anchor.set(0.5)
-    text.position = blueFlag.position
+    text.position = [mxp(blueFlag.position[0]), mxp(blueFlag.position[1])]
     text.visible = true
     return text
   })()
@@ -336,7 +337,7 @@ exports.init = function ({ x: mapX, y: mapY }, tilesize, walls, tiles, filters, 
     // Create bomb explosions
     for (const [id, x, y] of detonatedBombs) {
       const clip = sprites.makeBombExplosion()
-      clip.position.set(x, viewport.fixY(y))
+      clip.position.set(mxp(x), viewport.fixY(mxp(y)))
       bombExplosions[id] = clip
       stage.addChild(clip)
     }
@@ -353,8 +354,10 @@ exports.init = function ({ x: mapX, y: mapY }, tilesize, walls, tiles, filters, 
     // CREATE SHIP EXPLOSIONS
     for (const player of killedPlayers) {
       const clip = sprites.makeShipExplosion()
-      clip.position.set(player.body.position[0],
-                        viewport.fixY(player.body.position[1]))
+      clip.position.set(
+        mxp(player.body.position[0]),
+        viewport.fixY(mxp(player.body.position[1]))
+      )
       shipExplosions[player.id] = clip
       stage.addChild(clip)
     }
@@ -363,7 +366,8 @@ exports.init = function ({ x: mapX, y: mapY }, tilesize, walls, tiles, filters, 
       const player = simulation.players[id]
       if (state.sprites[id]) {
         // player sprite exists, so update it
-        const [x, y] = Array.from(player.body.interpolatedPosition)
+        const x = mxp(player.body.interpolatedPosition[0])
+        const y = mxp(player.body.interpolatedPosition[1])
         const container = state.sprites[id]
         const sprite = container.getChildAt(0)
         container.position.set(x, viewport.fixY(y))
@@ -379,7 +383,7 @@ exports.init = function ({ x: mapX, y: mapY }, tilesize, walls, tiles, filters, 
           stage.position.x = viewport.x/2 - x
           stage.position.y = viewport.y/2 - viewport.fixY(y)
           // also, check if we are out of bounds to display wallWarning
-          if (x < 0 || x > mapX || y < 0 || y > mapY) {
+          if (x < 0 || x > mxp(mapX) || y < 0 || y > mxp(mapY)) {
             wallWarning.position.x = x
             wallWarning.position.y = viewport.fixY(y + 50)
             wallWarning.visible = true
@@ -406,7 +410,8 @@ exports.init = function ({ x: mapX, y: mapY }, tilesize, walls, tiles, filters, 
         // player sprite must be created
         // TODO: Relocate to sprites.js
         // don't interpolate on sprite spawn, causes weird stuff
-        const [x, y] = Array.from(player.body.position)
+        const x = mxp(player.body.position[0])
+        const y = mxp(player.body.position[1])
         const container = new PIXI.Container()
         // container children (the ship sprite and the username)
         const sprite = new PIXI.Sprite.fromImage('./img/warbird.gif')
@@ -456,12 +461,14 @@ exports.init = function ({ x: mapX, y: mapY }, tilesize, walls, tiles, filters, 
       if (state.sprites[id]) {
         // sprite exists, so updated it
         const sprite = state.sprites[id]
-        const [x, y] = Array.from(bomb.body.interpolatedPosition)
+        const x = mxp(bomb.body.interpolatedPosition[0])
+        const y = mxp(bomb.body.interpolatedPosition[1])
         sprite.position.set(x, viewport.fixY(y))
       } else {
         // sprite does not exist, so create it
         // don't interpolate on sprite spawn, causes weird stuff
-        const [x, y] = Array.from(bomb.body.position)
+        const x = mxp(bomb.body.position[0])
+        const y = mxp(bomb.body.position[1])
         const sprite = sprites.makeBomb('A', 3)
         sprite.position.set(x, viewport.fixY(y))
         state.sprites[id] = sprite

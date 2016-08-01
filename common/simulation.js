@@ -7,6 +7,7 @@ const p2 = require('p2')
 const _ = require('lodash')
 // 1st
 const util = require('./util')
+const { pxm, mxp } = util
 const Physics = require('./physics')
 const Player = require('./player')
 const Bomb = require('./bomb')
@@ -24,7 +25,7 @@ module.exports = Simulation
 function makeWall (id, x, y, angle) {
   // wtf, setting id on wall seems to fix tunnel issue???
   // besides, thought it had to be a number
-  const body = new p2.Body({ id, mass: 0, angle })
+  const body = new p2.Body({ id, angle })
   const shape = new p2.Plane()
   shape.material = Material.wall
   shape.collisionGroup = Group.WALL
@@ -88,12 +89,11 @@ function makeDiode (tilesize, direction, x, y) {
 
 
 // Returns p2.Body
-function makeFlag (team, position) {
+function makeFlag (team, [x, y]) {
   console.assert(typeof team === 'string')
-  console.assert(Array.isArray(position))
   const body = new p2.Body()
   const shape = (() => {
-    const shape = new p2.Circle({ radius: 8 })
+    const shape = new p2.Circle({ radius: pxm(8) })
     // flags only collide with players
     shape.collisionGroup = Group.Flag[team]
     shape.collisionMask = Group.Player.ANY
@@ -102,7 +102,7 @@ function makeFlag (team, position) {
   // only triggers overlaps, not contacts
   //shape.sensor = true
   body.addShape(shape)
-  body.position = position
+  body.position = [x, y]
   // does not produce contact forces
   body.collisionResponse = false
   // TODO: Move this stuff out of the p2 body
@@ -127,14 +127,15 @@ function Simulation ({
     filters = { RED: [], BLUE: [] },
     diodes = []
   }) {
-  console.assert(Number.isInteger(width))
-  console.assert(Number.isInteger(height))
-  console.assert(Number.isInteger(tilesize))
+  console.assert(typeof width === 'number')
+  console.assert(typeof height === 'number')
+  console.assert(typeof tilesize === 'number')
   console.assert(Array.isArray(tiles))
   console.assert(Array.isArray(redFlag))
   console.assert(Array.isArray(blueFlag))
   console.assert(Array.isArray(redSpawns))
   console.assert(Array.isArray(blueSpawns))
+  // units are in meters
   this.width = width
   this.height = height
   this.tilesize = tilesize
@@ -392,10 +393,13 @@ Simulation.prototype.toSnapshot = function () {
 // ←↑→↓ = diodes, players can only pass/shoot thru tile in that direction
 // if a team doesn't have a spawn, their players will spawn randomly
 // on their half of the map
+//
+// tilesize is in meters
 Simulation.fromData = function (tilesize, data) {
-  console.assert(Number.isInteger(tilesize))
+  console.assert(typeof tilesize === 'number')
   console.assert(Array.isArray(data))
   data = data.reverse()
+  // size of game world
   const width = data[0].length * tilesize
   const height = data.length * tilesize
   let tiles = []
@@ -407,12 +411,12 @@ Simulation.fromData = function (tilesize, data) {
   const diodes = []
   for (let row = 0; row < data.length; row++) {
     for (let col = 0; col < data[0].length; col++) {
+      const cell = data[row][col]
       // short-circuit on empty spaces
-      if (data[row][col] === '.') continue
+      if (cell === '.') continue
       // Everything is anchored at its center
       const x = col * tilesize + tilesize / 2
       const y = row * tilesize + tilesize / 2
-      const cell = data[row][col]
       if (cell === 'X') {
         tiles.push([x, y])
       } else if (cell === '(') {
@@ -441,31 +445,12 @@ Simulation.fromData = function (tilesize, data) {
   }
   // Print stats
   console.log('== Initializing map ==')
-  console.log('- width: %spx', width)
-  console.log('- height:%spx', height)
+  console.log('- width: %s px', mxp(width))
+  console.log('- height:%s px', mxp(height))
   console.log('- redSpawns: %s', redSpawns.length)
   console.log('- blueSpawns: %s', blueSpawns.length)
   return new Simulation({
     width, height, tiles, tilesize, redFlag, blueFlag,
     redSpawns, blueSpawns, filters, diodes
   })
-}
-
-
-Simulation.example = function () {
-  const data = [
-    '>>>>>>>>>>>>>>>>>>..X..<<<<<<<<<<<<<<<<<<',
-    '....................X....................',
-    '....XXX.....XXX.....X....X........XXX....',
-    '.......X.......X....X.......X....X...X...',
-    'XX......X......X.............X..X.......X',
-    '.....X.................X...........X.....',
-    '...r.X.............X.....X..........X.b..',
-    'XX......X................X......X.......X',
-    '.......X..........XXXXX..........X.......',
-    '....XXX....XXXXX.........XXXX.....XXX....',
-    '.........................................',
-    '>>>>>>>>>>>>>>>>>.X...X.<<<<<<<<<<<<<<<<<',
-  ]
-  return Simulation.fromData(32, data)
 }

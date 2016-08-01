@@ -62,3 +62,16 @@ exports.flipTeam = function (team) {
   console.assert(team === 'RED' || team === 'BLUE')
   return team === 'RED' ? 'BLUE' : 'RED'
 }
+
+
+// CONVERT GAME PIXEL UNITS <-> P2 METER SCALE
+
+
+exports.pxm = function (pixels) {
+  return pixels * 0.05
+}
+
+
+exports.mxp = function (meters) {
+  return meters * 20
+}

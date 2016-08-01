@@ -10,6 +10,7 @@ const performance = { now: require('performance-now') }
 const nodeStatic = require('node-static')
 // 1st
 const util = require('../common/util')
+const { mxp, pxm } = util
 const Simulation = require('../common/simulation')
 const Player = require('../common/player')
 const Bomb = require('../common/bomb')
@@ -24,7 +25,7 @@ const map1 = fs.readFileSync(path.join(__dirname, '../map1.txt'), 'utf8')
   .filter(Boolean)
 
 const state = {
-  simulation: Simulation.fromData(32, map1),
+  simulation: Simulation.fromData(pxm(32), map1),
   startTime: Date.now()
 }
 

@@ -7,6 +7,8 @@ const util = require('../common/util')
 
 
 // NOTE: maybe i should use `yi` to mean inverted y.
+//
+// Everything passed into this file should already be in pixels, not meters
 
 
 // GENERAL
@@ -166,7 +168,7 @@ exports.makeTile = (function () {
     './img/tile3.png'
   ]
   return function (tilesize) {
-    console.assert(Number.isInteger(tilesize))
+    console.assert(typeof tilesize === 'number')
     const image = util.randNth(tileImages)
     const sprite = new PIXI.Sprite.fromImage(image)
     sprite.width = tilesize
