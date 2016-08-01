@@ -9,7 +9,7 @@ const sprites = require('./sprites')
 
 // Initialize the renderer by passing in the actual map dimensions,
 // which is different from the viewport dimensions.
-exports.init = function ({ x: mapX, y: mapY }, tilesize, walls, tiles, filters, redFlagPos, blueFlagPos, onStageClick) {
+exports.init = function ({ x: mapX, y: mapY }, tilesize, walls, tiles, filters, diodes, redFlagPos, blueFlagPos, onStageClick) {
   console.assert(Array.isArray(walls))
   console.assert(Array.isArray(tiles))
   console.assert(Array.isArray(redFlagPos))
@@ -163,6 +163,13 @@ exports.init = function ({ x: mapX, y: mapY }, tilesize, walls, tiles, filters, 
     stage.addChild(sprite)
   }
 
+
+  // DIODES
+
+  for (const [direction, x, y] of diodes) {
+    const sprite = sprites.makeDiode(tilesize, direction, x, viewport.fixY(y))
+    stage.addChild(sprite)
+  }
 
 
   // FLAGS

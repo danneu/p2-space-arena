@@ -24,6 +24,7 @@ exports.Filter.BLUE = Math.pow(2, 7)
 exports.Filter.ANY = exports.Filter.RED | exports.Filter.BLUE
 
 exports.WALL = Math.pow(2, 8)
+exports.DIODE = Math.pow(2, 9)
 
 // A group that collides with everything
 exports.ALL = -1

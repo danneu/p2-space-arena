@@ -68,6 +68,25 @@ function makeFilter (team, tilesize, x, y) {
 }
 
 
+function makeDiode (tilesize, direction, x, y) {
+  const body = new p2.Body()
+  body.isWall = true
+  body.isDiode = direction
+  body.position = [x, y]
+  body.tilesize = tilesize
+  const shape = new p2.Box({ width: tilesize, height: tilesize })
+  //shape.material = Material.wall
+  shape.collisionGroup = Group.DIODE
+  // FIXME: Diodes should also work for players not just bombs.
+  // Couldn't get it working within a couple hours though, so just
+  // bombs for now.
+  shape.collisionMask = Group.Bomb.ANY | Group.Player.ANY
+  shape.material = Material.wall
+  body.addShape(shape)
+  return body
+}
+
+
 // Returns p2.Body
 function makeFlag (team, position) {
   console.assert(typeof team === 'string')
@@ -105,7 +124,8 @@ function Simulation ({
     redSpawns = [], blueSpawns = [],
     // these are optional
     redCarrier = null, blueCarrier = null,
-    filters = { RED: [], BLUE: [] }
+    filters = { RED: [], BLUE: [] },
+    diodes = []
   }) {
   console.assert(Number.isInteger(width))
   console.assert(Number.isInteger(height))
@@ -150,6 +170,12 @@ function Simulation ({
   // TILES
   this.tiles = tiles.map(([x, y]) => makeTile(tilesize, x, y))
   this.tiles.forEach((body) => this.world.addBody(body))
+  // DIODES
+  this.diodes = diodes
+  this.diodes.forEach(([direction, x, y]) => {
+    const body = makeDiode(tilesize, direction, x, y)
+    this.world.addBody(body)
+  })
   // SPAWNS
   this.redSpawns = redSpawns
   this.blueSpawns = blueSpawns
@@ -363,6 +389,7 @@ Simulation.prototype.toSnapshot = function () {
 // ( = red filter (only red can pass/shoot thru
 // < = blue spawn
 // ) = blue filter
+// ←↑→↓ = diodes, players can only pass/shoot thru tile in that direction
 // if a team doesn't have a spawn, their players will spawn randomly
 // on their half of the map
 Simulation.fromData = function (tilesize, data) {
@@ -377,6 +404,7 @@ Simulation.fromData = function (tilesize, data) {
   let redSpawns = []
   let blueSpawns = []
   const filters = { RED: [], BLUE: [] }
+  const diodes = []
   for (let row = 0; row < data.length; row++) {
     for (let col = 0; col < data[0].length; col++) {
       // short-circuit on empty spaces
@@ -391,6 +419,9 @@ Simulation.fromData = function (tilesize, data) {
         filters.RED.push([x, y])
       } else if (cell === ')') {
         filters.BLUE.push([x, y])
+      } else if (['←', '↑', '→', '↓'].includes(cell)) {
+        const direction = {'←':'LEFT', '↑': 'UP', '→': 'RIGHT', '↓': 'DOWN'}[cell]
+        diodes.push([direction, x, y])
       } else if (cell === 'r') {
         redFlag = [x, y]
       } else if (cell === 'b') {
@@ -416,7 +447,7 @@ Simulation.fromData = function (tilesize, data) {
   console.log('- blueSpawns: %s', blueSpawns.length)
   return new Simulation({
     width, height, tiles, tilesize, redFlag, blueFlag,
-    redSpawns, blueSpawns, filters
+    redSpawns, blueSpawns, filters, diodes
   })
 }
 

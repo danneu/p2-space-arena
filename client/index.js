@@ -54,7 +54,7 @@ socket.on(':init', (data) => {
   state.simulation = new Simulation(map)
   // TODO: I should just change this to renderer.init(simulation, ...)
   //       This is stupid
-  state.render = renderer.init({ x: map.width, y: map.height }, state.simulation.tilesize, state.simulation.walls, state.simulation.tiles, state.simulation.filters, Array.from(state.simulation.redFlag.position), Array.from(state.simulation.blueFlag.position), onStageClick)
+  state.render = renderer.init({ x: map.width, y: map.height }, state.simulation.tilesize, state.simulation.walls, state.simulation.tiles, state.simulation.filters, state.simulation.diodes, Array.from(state.simulation.redFlag.position), Array.from(state.simulation.blueFlag.position), onStageClick)
   // Start update loop when user is ready
   setInterval(update, 1000 / 60)
   requestAnimationFrame(renderLoop)
@@ -376,6 +376,85 @@ function startClientStuff () {
   })
 
 
+  // HANDLE {BOMB,PLAYER}<-> DIODE CONTACT
+
+
+  /* state.simulation.world.on('postBroadphase', ({pairs}) => {
+   *   for (let i = 0; i < pairs.length; i += 2) {
+   *     if (pairs[i].isDiode || pairs[i + 1].isDiode) {
+   *       let diodeIdx = pairs[i].isDiode ? i : i + 1
+   *       let colliderIdx = pairs[i].isDiode ? i + 1 : i
+   *       // check if collider is moving against diode direction
+   *       let collides
+   *       switch (pairs[diodeIdx].isDiode) {
+   *         case 'UP':
+   *           collides = pairs[colliderIdx].velocity[1] < 0
+   *           break
+   *         case 'DOWN':
+   *           collides = pairs[colliderIdx].velocity[1] > 0
+   *           break
+   *         case 'LEFT':
+   *           collides = pairs[colliderIdx].velocity[0] > 0
+   *           break
+   *         case 'RIGHT':
+   *           collides = pairs[colliderIdx].velocity[0] < 0
+   *           break
+   *       }
+   *       console.log('collides', collides)
+   *       if (!collides) {
+   *         pairs.splice(Math.min(diodeIdx, colliderIdx), 2)
+   *       }
+   *     }
+   *   }
+   * })
+   */
+
+  state.simulation.world.on('beginContact', ({bodyA, bodyB}) => {
+    if ((bodyA.isDiode || bodyB.isDiode) && (bodyA.isBomb || bodyB.isBomb)) {
+      // these are actual their bodies
+      let diode
+      let bomb
+      if (bodyA.isDiode) {
+        diode = bodyA
+        bomb = bodyB
+      } else {
+        bomb = bodyA
+        diode = bodyB
+      }
+      let collides
+      switch (diode.isDiode) {
+        case 'UP':
+          collides = bomb.velocity[1] < 0
+          break
+        case 'DOWN':
+          collides = bomb.velocity[1] > 0
+          break
+        case 'LEFT':
+          collides = bomb.velocity[0] > 0
+          break
+        case 'RIGHT':
+          collides = bomb.velocity[0] < 0
+          break
+      }
+      if (collides) {
+        detonateBombFx(bomb)
+      } else {
+        bomb.passDiode = diode.id
+      }
+    }
+  })
+
+
+  function detonateBombFx (body) {
+    if (body.detonated) return
+    body.detonated = true
+    state.detonatedBombs.push([body.id, ...Array.from(body.position)])
+    state.simulation.removeBomb(body.id)
+    state.spritesToRemove.push(body.id)
+    sounds.bombExplode.play()
+  }
+
+
   // HANDLE BOMB<->WALL CONTACT
 
 
@@ -385,21 +464,14 @@ function startClientStuff () {
   //
   // This is a mess
   state.simulation.world.on('beginContact', ({bodyA, bodyB}) => {
-    // Check wall<->bomb
+    // we set bombBody.passDiode = diodeBody.id upstream so we
+    // know to skip this check. FIXME
     if (bodyA.isWall && bodyB.isBomb) {
-      if (bodyB.detonated) return
-      bodyB.detonated = true
-      state.detonatedBombs.push([bodyB.id, ...Array.from(bodyB.position)])
-      state.simulation.removeBomb(bodyB.id)
-      state.spritesToRemove.push(bodyB.id)
-      sounds.bombExplode.play()
+      if (bodyA.isDiode && bodyB.passDiode === bodyA.id) return
+      detonateBombFx(bodyB)
     } else if (bodyA.isBomb && bodyB.isWall) {
-      if (bodyA.detonated) return
-      bodyA.detonated = true
-      state.detonatedBombs.push([bodyA.id, ...Array.from(bodyA.position)])
-      state.simulation.removeBomb(bodyA.id)
-      state.spritesToRemove.push(bodyA.id)
-      sounds.bombExplode.play()
+      if (bodyB.isDiode && bodyA.passDiode === bodyB.id) return
+      detonateBombFx(bodyA)
     }
   })
 

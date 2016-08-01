@@ -41,9 +41,12 @@ function Player (id, team, position, angle) {
     // TODO: graphic radius is 15, but seems best to make collision
     // radius a lil smaller for wall collisions, but not bomb collisions.
     const shape = new p2.Circle({ radius: 15 })
-    // Players don't collide with other players or teammate bombs
+    const otherTeam = util.flipTeam(team)
     shape.collisionGroup = Group.Player[team]
-    shape.collisionMask = Group.ALL ^ Group.Player.ANY ^ Group.Bomb[team]
+    shape.collisionMask = Group.Flag.ANY
+                        | Group.WALL | Group.DIODE
+                        | Group.Bomb[otherTeam]
+                        | Group.Filter[otherTeam]
     shape.material = Material.ship
     body.addShape(shape)
     body.angle = angle || 0

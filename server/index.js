@@ -71,6 +71,7 @@ server.on('connection', (socket) => {
       tilesize: state.simulation.tilesize,
       tiles: state.simulation.tiles.map((body) => Array.from(body.position)),
       filters: state.simulation.filters,
+      diodes: state.simulation.diodes,
       redFlag: Array.from(state.simulation.redFlag.position),
       blueFlag: Array.from(state.simulation.blueFlag.position),
       redCarrier: state.simulation.redCarrier,

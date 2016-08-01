@@ -37,7 +37,10 @@ function Bomb (id, userId, team, position, velocity) {
     shape.collisionGroup = Group.Bomb[team]
     console.log('%s bomb msk should be targetting %s', team, util.flipTeam(team))
     const otherTeam = util.flipTeam(team)
-    shape.collisionMask = Group.WALL | Group.Player[otherTeam] | Group.Filter[otherTeam]
+    shape.collisionMask = Group.WALL
+                        | Group.DIODE
+                        | Group.Player[otherTeam]
+                        | Group.Filter[otherTeam]
     body.addShape(shape)
     body.velocity = velocity
     body.isBomb = true

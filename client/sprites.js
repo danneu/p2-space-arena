@@ -198,3 +198,24 @@ exports.makeFilter = function (tilesize, x, yi, tint) {
   sprite.height = tilesize
   return sprite
 }
+
+
+exports.makeDiode = function (tilesize, direction, x, yi) {
+  const sprite = new PIXI.Sprite.fromImage('./img/diode.png')
+  sprite.anchor.set(0.5)
+  sprite.position.set(x, yi)
+  sprite.width = tilesize
+  sprite.height = tilesize
+  switch (direction) {
+    case 'RIGHT':
+      sprite.rotation = Math.PI / 2
+      break
+    case 'DOWN':
+      sprite.rotation = Math.PI
+      break
+    case 'LEFT':
+      sprite.rotation = Math.PI * 3 / 2
+      break
+  }
+  return sprite
+}
