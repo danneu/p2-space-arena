@@ -2,7 +2,8 @@
 
 // 3rd
 const io = require('socket.io-client')
-const vec2 = require('p2').vec2
+const p2 = require('p2')
+const vec2 = p2.vec2
 // 1st
 const util = require('../common/util')
 const { pxm, mxp } = util
@@ -53,6 +54,11 @@ socket.on(':init', (data) => {
   const {userId, map} = data
   state.userId = userId
   state.simulation = new Simulation(map)
+
+  // The client can enable some optimizations
+  // state.simulation.world.sleepMode = p2.World.BODY_SLEEPING
+  // state.simulation.world.solver.tolerance = 1 //.001 // default: 0.0000001
+
   // TODO: I should just change this to renderer.init(simulation, ...)
   //       This is stupid
   state.render = renderer.init({ x: map.width, y: map.height }, state.simulation.tilesize, state.simulation.walls, state.simulation.tiles, state.simulation.filters, state.simulation.diodes, Array.from(state.simulation.redFlag.position), Array.from(state.simulation.blueFlag.position), onStageClick)

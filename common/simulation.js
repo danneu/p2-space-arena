@@ -125,7 +125,8 @@ function Simulation ({
     // these are optional
     redCarrier = null, blueCarrier = null,
     filters = { RED: [], BLUE: [] },
-    diodes = []
+    diodes = [],
+    bounded = false
   }) {
   console.assert(typeof width === 'number')
   console.assert(typeof height === 'number')
@@ -141,7 +142,9 @@ function Simulation ({
   this.tilesize = tilesize
   this.world = (function () {
     const world = new p2.World()
+    world.defaultContactMaterial.friction = 0
     world.applyGravity = false
+    world.applySpringForces = false
     // turn off event we aren't using
     world.emitImpactEvent = false
     return world
@@ -149,14 +152,16 @@ function Simulation ({
   this.players = Object.create(null) // mapping of userId -> Player
   this.bombs = Object.create(null) // mapping of userId -> Bomb
   // WALLS
-  const top = makeWall('top', 0, height, Math.PI)
-  const bottom = makeWall('bottom', width, 0, 0)
-  const right = makeWall('right', width, height, Math.PI / 2)
-  const left = makeWall('left', 0, 0, (3 * Math.PI) / 2)
-  // exposed for debug
-  this.walls = [top, bottom, left, right]
-  for (const body of [top, bottom, left, right]) {
-    this.world.addBody(body)
+  if (bounded) {
+    const top = makeWall('top', 0, height, Math.PI)
+    const bottom = makeWall('bottom', width, 0, 0)
+    const right = makeWall('right', width, height, Math.PI / 2)
+    const left = makeWall('left', 0, 0, (3 * Math.PI) / 2)
+    // exposed for debug
+    this.walls = [top, bottom, left, right]
+    for (const body of [top, bottom, left, right]) {
+      this.world.addBody(body)
+    }
   }
   // FILTERS - Tiles that only one team can enter
   filters.RED.forEach(([x, y]) => {

@@ -83,44 +83,8 @@ exports.init = function ({ x: mapX, y: mapY }, tilesize, walls, tiles, filters, 
   stage.addChild(bg)
 
 
-  // DRAW WALLS, trying to figure out why the ship often tunnel into the
-  // p2.Plane walls
-
-
-  const [top, bot, left, right] = walls
-  let gfx
-
-  gfx = new PIXI.Graphics() // top, red
-  gfx.beginFill(0x000000)
-  gfx.lineStyle(5, 0xFF0000)
-  gfx.moveTo(-viewport.x * 2, viewport.fixY(mxp(top.position[1])))
-  gfx.lineTo(viewport.x * 2, viewport.fixY(mxp(top.position[1])))
-  stage.addChild(gfx)
-
-  gfx = new PIXI.Graphics() // bottom, orange
-  gfx.beginFill(0x000000)
-  gfx.lineStyle(5, 0xFFA500)
-  gfx.moveTo(-viewport.x * 2, viewport.fixY(mxp(bot.position[1])))
-  gfx.lineTo(viewport.x * 2, viewport.fixY(mxp(bot.position[1])))
-  stage.addChild(gfx)
-
-  gfx = new PIXI.Graphics() // left, blue
-  gfx.beginFill(0x000000)
-  gfx.lineStyle(5, 0x0000FF)
-  gfx.moveTo(mxp(left.position[0]), -viewport.y * 2)
-  gfx.lineTo(mxp(left.position[0]), viewport.y * 2)
-  stage.addChild(gfx)
-
-  gfx = new PIXI.Graphics() // right, green
-  gfx.beginFill(0x000000)
-  gfx.lineStyle(5, 0x00FF00)
-  gfx.moveTo(mxp(right.position[0]), -viewport.y * 2)
-  gfx.lineTo(mxp(right.position[0]), viewport.y * 2)
-  stage.addChild(gfx)
-
-
   const wallWarning = (function () {
-    const message = `You've tunneled outside of the map.`
+    const message = 'Out of bounds'
     const wallWarning = new PIXI.Text(message, {
       font: '18px Arial',
       fill: 0xFF0000,
