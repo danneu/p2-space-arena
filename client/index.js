@@ -512,6 +512,8 @@ function startClientStuff () {
       //       for cleaning up state garbage.
       state.detonatedBombs = []
       state.killedPlayers = []
+      // Avoid catchup
+      lastUpdate = null
     } else {
       // Client is tabbing out of game
 
