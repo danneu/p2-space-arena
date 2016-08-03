@@ -11,7 +11,6 @@ const sprites = require('./sprites')
 // Initialize the renderer by passing in the actual map dimensions,
 // which is different from the viewport dimensions.
 exports.init = function ({ x: mapX, y: mapY }, tilesize, walls, tiles, filters, diodes, redFlagPos, blueFlagPos, onStageClick) {
-  console.assert(Array.isArray(walls))
   console.assert(Array.isArray(tiles))
   console.assert(Array.isArray(redFlagPos))
   console.assert(Array.isArray(blueFlagPos))
@@ -159,7 +158,7 @@ exports.init = function ({ x: mapX, y: mapY }, tilesize, walls, tiles, filters, 
       align: 'center'
     })
     text.anchor.set(0.5)
-    text.position = [mxp(redFlag.position[0]), mxp(redFlag.position[1])]
+    text.position = redFlag.position
     text.visible = false
     return text
   })()
@@ -172,8 +171,8 @@ exports.init = function ({ x: mapX, y: mapY }, tilesize, walls, tiles, filters, 
       align: 'center'
     })
     text.anchor.set(0.5)
-    text.position = [mxp(blueFlag.position[0]), mxp(blueFlag.position[1])]
-    text.visible = true
+    text.position = blueFlag.position
+    text.visible = false
     return text
   })()
   stage.addChild(blueFlagTaken)
