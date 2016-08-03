@@ -484,11 +484,11 @@ function startClientStuff () {
 
     function broadcastPosition () {
       const player = state.simulation.getPlayer(state.userId)
-      socket.emit(':position', {
-        position: player.body.interpolatedPosition,
-        angle: player.body.interpolatedAngle,
-        velocity: player.body.velocity
-      })
+      socket.emit(':position', [
+        player.body.interpolatedPosition,
+        player.body.interpolatedAngle,
+        player.body.velocity
+      ])
     }
 
     setInterval(broadcastPosition, 1000 / perSecond)

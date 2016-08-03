@@ -112,11 +112,11 @@ function onDisconnect (socket) {
 
 
 // Player is broadcasting their position
-function onPosition (socket, packet) {
+function onPosition (socket, [position, angle, velocity]) {
   const player = state.simulation.getPlayer(socket.userId)
-  player.body.position = packet.position
-  player.body.angle = packet.angle
-  player.body.velocity = packet.velocity
+  player.body.position = position
+  player.body.angle = angle
+  player.body.velocity = velocity
 }
 
 
