@@ -484,6 +484,12 @@ Simulation.fromData = function (tilesize, data, opts = {}) {
 // - bomb:hitWall {bomb, wallBody}
 
 
+// Right now the server/client are responsible for updating the simulation
+// via these hooks (like removing entities from the simulation post-
+// collision). Not sure if it's the best way but lets me diverge server/client
+// in rather straightforward way.
+
+
 function attachEvents () {
   this.world.on('beginContact', ({bodyA, bodyB}) => {
     let player
