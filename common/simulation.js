@@ -400,7 +400,7 @@ Simulation.prototype.toSnapshot = function () {
 // on their half of the map
 //
 // tilesize is in meters
-Simulation.fromData = function (tilesize, data) {
+Simulation.fromData = function (tilesize, data, opts = {}) {
   console.assert(typeof tilesize === 'number')
   console.assert(Array.isArray(data))
   data = data.reverse()
@@ -454,8 +454,8 @@ Simulation.fromData = function (tilesize, data) {
   console.log('- height:%s px', mxp(height))
   console.log('- redSpawns: %s', redSpawns.length)
   console.log('- blueSpawns: %s', blueSpawns.length)
-  return new Simulation({
+  return new Simulation(Object.assign({}, {
     width, height, tiles, tilesize, redFlag, blueFlag,
     redSpawns, blueSpawns, filters, diodes
-  })
+  }, opts))
 }
