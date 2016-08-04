@@ -145,10 +145,8 @@ socket.on(':bombShot', ({id, userId, position, velocity}) => {
 // Reminder: bomb and victim are just json data, not instances
 socket.on(':bombHit', ({bomb, victim}) => {
   console.log('[recv :bombHit] bomb=', bomb, 'victim=', victim)
-  state.detonatedBombs.push([bomb.id, ...bomb.position])
-  sounds.bombExplode.play()
   state.simulation.removeBomb(bomb.id)
-  state.spritesToRemove.push(bomb.id)
+  detonateBombFx(bomb)
   // Since bombs insta-gib players, create ship explosion here
   state.killedPlayers.push(state.simulation.getPlayer(victim.id))
 })
@@ -414,16 +412,6 @@ function startClientStuff () {
   })
 
 
-  function detonateBombFx (body) {
-    //if (body.detonated) return
-    //body.detonated = true
-    state.detonatedBombs.push([body.id, ...Array.from(body.position)])
-    //state.simulation.removeBomb(body.id)
-    state.spritesToRemove.push(body.id)
-    sounds.bombExplode.play()
-  }
-
-
   // HANDLE BOMB<->WALL CONTACT
 
 
@@ -531,3 +519,12 @@ function startClientStuff () {
     state.showHitbox = e.target.checked
   })
 })()
+
+
+
+
+function detonateBombFx (body) {
+  state.detonatedBombs.push([body.id, ...Array.from(body.position)])
+  state.spritesToRemove.push(body.id)
+  sounds.bombExplode.play()
+}

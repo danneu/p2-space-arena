@@ -167,6 +167,7 @@ setInterval(update, 1000 / updatesPerSecond)
 state.simulation.on('bomb:hitPlayer', ({bomb, victim, shooter}) => {
   // we only remove bomb from simulation on server when it hits the playe.
   // the client will wait til a wall hit or til server broadcasts player hit.
+  // TODO: Handle race condition on client: local wall hit vs server player hit
   state.simulation.removeBomb(bomb.id)
   server.emit(':bombHit', {
     bomb: bomb.toJson(),
