@@ -145,15 +145,8 @@ socket.on(':bombShot', ({id, userId, position, velocity}) => {
 // Reminder: bomb and victim are just json data, not instances
 socket.on(':bombHit', ({bomb, victim}) => {
   console.log('[recv :bombHit] bomb=', bomb, 'victim=', victim)
-  const simBomb = state.simulation.getBomb(bomb.id)
-  // simBomb was already handled by local simulation (see beginContact)
-  if (!simBomb) return
-  // avoid duplicate explosions
-  if (!simBomb.body.detonated) {
-    simBomb.body.detonated = true
-    state.detonatedBombs.push([bomb.id, ...bomb.position])
-    sounds.bombExplode.play()
-  }
+  state.detonatedBombs.push([bomb.id, ...bomb.position])
+  sounds.bombExplode.play()
   state.simulation.removeBomb(bomb.id)
   state.spritesToRemove.push(bomb.id)
   // Since bombs insta-gib players, create ship explosion here
@@ -422,10 +415,10 @@ function startClientStuff () {
 
 
   function detonateBombFx (body) {
-    if (body.detonated) return
-    body.detonated = true
+    //if (body.detonated) return
+    //body.detonated = true
     state.detonatedBombs.push([body.id, ...Array.from(body.position)])
-    state.simulation.removeBomb(body.id)
+    //state.simulation.removeBomb(body.id)
     state.spritesToRemove.push(body.id)
     sounds.bombExplode.play()
   }
@@ -434,28 +427,18 @@ function startClientStuff () {
   // HANDLE BOMB<->WALL CONTACT
 
 
-  // Sync body.detonated with :bomb_hit
-  // body.detonated used so that :bomb_hit and this callback do not
-  // repeat each other's work like spawning two explosions
-  //
-  // This is a mess
-  state.simulation.world.on('beginContact', ({bodyA, bodyB}) => {
+  state.simulation.on('bomb:hitWall', ({bomb, wallBody}) => {
+    console.log('bomb:hitWall')
     // we set bombBody.passDiode = diodeBody.id upstream so we
     // know to skip this check. FIXME
-    if (bodyA.isWall && bodyB.isBomb) {
-      if (bodyA.isDiode && bodyB.passDiode === bodyA.id) return
-      detonateBombFx(bodyB)
-    } else if (bodyA.isBomb && bodyB.isWall) {
-      if (bodyB.isDiode && bodyA.passDiode === bodyB.id) return
-      detonateBombFx(bodyA)
-    }
+    //if (wallBody.isDiode && bomb.body.passDiode === wallBody.id) return
+    detonateBombFx(bomb.body)
   })
 
 
   // TRACK WHETHER PLAYER IS TOUCHING WALL
   //
   // If player it touching a wall, slow them down
-
 
 
   state.simulation.world.on('beginContact', ({bodyA, bodyB}) => {

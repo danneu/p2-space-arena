@@ -25,7 +25,7 @@ const map1 = fs.readFileSync(path.join(__dirname, '../map1.txt'), 'utf8')
   .filter(Boolean)
 
 const state = {
-  simulation: Simulation.fromData(pxm(32), map1),
+  simulation: Simulation.fromData(pxm(32), map1, { isServer: true }),
   startTime: Date.now()
 }
 
@@ -164,45 +164,10 @@ setInterval(update, 1000 / updatesPerSecond)
 // CHECK FOR BOMB COLLISION
 
 
-state.simulation.world.on('beginContact', ({bodyA, bodyB}) => {
-  // Bomb is hitting a player
-  let bomb
-  let victim
-  let shooter
-  if (bodyA.isBomb && bodyB.isPlayer) {
-    bomb = state.simulation.getBomb(bodyA.id)
-    victim = state.simulation.getPlayer(bodyB.id)
-  } else if (bodyA.isPlayer && bodyB.isBomb) {
-    bomb = state.simulation.getBomb(bodyB.id)
-    victim = state.simulation.getPlayer(bodyA.id)
-  } else {
-    // No collision, so bail
-    return
-  }
-  // HACK: I need to figure out why the player cannot be found.
-  // It's causing a runtime error. For now I'll hack in a short-circuit.
-  if (!victim) {
-    return
-  }
-  // Ignore our own bombs
-  if (bomb.userId === victim.id) {
-    return
-  }
-  // We can load the shooter now
-  shooter = state.simulation.getPlayer(bomb.userId)
-  // HACK: I need to figure out why the player cannot be found.
-  // It's causing a runtime error. For now I'll hack in a short-circuit.
-  if (!shooter) {
-    return
-  }
-  // Ignore friendly-fire
-  if (victim.team === shooter.team) {
-    return
-  }
-  // Okay, it was a legit hit on an enemy
-  // Remove the bomb from the simulation
+state.simulation.on('bomb:hitPlayer', ({bomb, victim, shooter}) => {
+  // we only remove bomb from simulation on server when it hits the playe.
+  // the client will wait til a wall hit or til server broadcasts player hit.
   state.simulation.removeBomb(bomb.id)
-  // And broadcast :bombHit to everyone
   server.emit(':bombHit', {
     bomb: bomb.toJson(),
     victim: victim.toJson()
@@ -213,54 +178,15 @@ state.simulation.world.on('beginContact', ({bodyA, bodyB}) => {
 })
 
 
-// CHECK FOR PLAYER <-> FLAG COLLISION (FLAG PICKUP)
+// EMIT SIMULATION EVENTS TO CLIENTS
 
 
-state.simulation.world.on('beginContact', ({bodyA, bodyB}) => {
-  let player
-  let flagTeam
-  if (bodyA.isPlayer && bodyB.isFlag && bodyA.team !== bodyB.team) {
-    player = state.simulation.getPlayer(bodyA.id)
-    flagTeam = bodyB.team
-  } else if (bodyB.isPlayer && bodyA.isFlag && bodyA.team !== bodyB.team) {
-    player = state.simulation.getPlayer(bodyB.id)
-    flagTeam = bodyA.team
-  }
-  // there was no player collision with enemy flag
-  if (!player) return
-  // ignore collision if there is already a carrier
-  if (flagTeam === 'RED' && state.simulation.redCarrier) return
-  if (flagTeam === 'BLUE' && state.simulation.blueCarrier) return
-  // looks good, so lets update the simulation and broadcast flag pickup
-  if (flagTeam === 'RED') {
-    state.simulation.redCarrier = player.id
-  } else {
-    state.simulation.blueCarrier = player.id
-  }
+state.simulation.on('flag:take', ({player, flagTeam}) => {
   server.emit(':flagTaken', [flagTeam, player.id])
 })
 
 
-// CHECK FOR PLAYER <-> FLAG COLLISION (FLAG SCORE)
-
-
-state.simulation.world.on('beginContact', ({bodyA, bodyB}) => {
-  let player
-  if (bodyA.isPlayer && bodyB.isFlag && bodyA.team === bodyB.team) {
-    player = state.simulation.getPlayer(bodyA.id)
-  } else if (bodyB.isPlayer && bodyA.isFlag && bodyA.team === bodyB.team) {
-    player = state.simulation.getPlayer(bodyB.id)
-  }
-  // there was no player collision with friendly flag
-  if (!player) return
-  // ignore collision if player is not a flag carrier
-  if (state.simulation.blueCarrier !== player.id && state.simulation.redCarrier !== player.id) return
-  // looks good, so lets update the simulation and broadcast flag score
-  if (player.team === 'BLUE') {
-    state.simulation.redCarrier = null
-  } else {
-    state.simulation.blueCarrier = null
-  }
+state.simulation.on('flag:capture', ({player}) => {
   // TODO: :flagCaptured
   server.emit(':flagCapture', player.team)
 })

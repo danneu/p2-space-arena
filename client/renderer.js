@@ -188,8 +188,11 @@ exports.init = function ({ x: mapX, y: mapY }, tilesize, walls, tiles, filters, 
 
   // Map of playerId -> PIXI.MovieClip
   const shipExplosions = {}
-  // Map of bombId -> PIXI.MovieClip
-  const bombExplosions = {}
+  // Array of PIXI.MovieClip
+  // Using an array here since one bomb my explode two times due to latency,
+  // e.g. client simulates local wall hit before it gets server's player-hit
+  // broadcast
+  const bombExplosions = []
 
 
   // FLAG CARRIER GLOW
@@ -288,20 +291,20 @@ exports.init = function ({ x: mapX, y: mapY }, tilesize, walls, tiles, filters, 
       blueFlagTaken.visible = false
     }
     // Update / decay / destroy existing bob explosions
-    for (const id in bombExplosions) {
-      const clip = bombExplosions[id]
+    for (let i = 0; i < bombExplosions.length; i++) {
+      const clip = bombExplosions[i]
       // if clip is at final frame, destroy it
       if (clip.currentFrame === clip.totalFrames - 1) {
         stage.removeChild(clip)
         clip.destroy()
-        delete bombExplosions[id]
+        bombExplosions.splice(i, 1)
       }
     }
     // Create bomb explosions
     for (const [id, x, y] of detonatedBombs) {
       const clip = sprites.makeBombExplosion()
       clip.position.set(mxp(x), viewport.fixY(mxp(y)))
-      bombExplosions[id] = clip
+      bombExplosions.push(clip)
       stage.addChild(clip)
     }
     // DECAY / REMOVE SHIP EXPLOSIONS

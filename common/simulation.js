@@ -126,7 +126,8 @@ function Simulation ({
     redCarrier = null, blueCarrier = null,
     filters = { RED: [], BLUE: [] },
     diodes = [],
-    bounded = false
+    bounded = false,
+    isServer = false
   }) {
   console.assert(typeof width === 'number')
   console.assert(typeof height === 'number')
@@ -136,6 +137,9 @@ function Simulation ({
   console.assert(Array.isArray(blueFlag))
   console.assert(Array.isArray(redSpawns))
   console.assert(Array.isArray(blueSpawns))
+  // the simulation emits events for client/server to handle
+  p2.EventEmitter.apply(this)
+  this.isServer = isServer
   // units are in meters
   this.width = width
   this.height = height
@@ -193,7 +197,14 @@ function Simulation ({
   this.blueCarrier = blueCarrier  // player id that is carrying blue flag
   // MATERIALS
   this.world.addContactMaterial(Material.wallVsShip)
+  // EVENTS (sim must be an event emitter and have .world populated)
+  attachEvents.call(this)
 }
+
+
+Simulation.prototype = _.create(p2.EventEmitter.prototype, {
+  'constructor': Simulation
+})
 
 
 // This method should be used to init a Player instance since
@@ -458,4 +469,131 @@ Simulation.fromData = function (tilesize, data, opts = {}) {
     width, height, tiles, tilesize, redFlag, blueFlag,
     redSpawns, blueSpawns, filters, diodes
   }, opts))
+}
+
+
+//
+// HOOK UP EVENTS (an experimental effort to begin deduping logic)
+//
+// Emitted for server:
+// - flag:beginContact ({player, flagTeam})
+//   - flag:take ({player, flagTeam})
+//   - flag:capture ({player, flagTeam})
+//
+// - bomb:hitPlayer {victim, shooter, bomb}
+// - bomb:hitWall {bomb, wallBody}
+
+
+function attachEvents () {
+  this.world.on('beginContact', ({bodyA, bodyB}) => {
+    let player
+    let flagTeam
+    if (bodyA.isPlayer && bodyB.isFlag) {
+      player = this.getPlayer(bodyA.id)
+      flagTeam = bodyB.team
+    } else if (bodyB.isPlayer && bodyA.isFlag) {
+      player = this.getPlayer(bodyB.id)
+      flagTeam = bodyA.team
+    }
+    // ignore if no player
+    // TODO: Investigate why this can happen.
+    if (!player) return
+    this.emit({ type: 'flag:beginContact', player, flagTeam })
+  })
+
+  this.on('flag:beginContact', ({player, flagTeam}) => {
+    // ignore collision by same team
+    if (player.team === flagTeam) return
+    // ignore collision if there already is a carrier
+    if (flagTeam === 'RED' && this.redCarrier) return
+    if (flagTeam === 'BLUE' && this.blueCarrier) return
+    // looks good, so update the simulation and emit
+    if (flagTeam === 'RED') {
+      this.redCarrier = player.id
+    } else {
+      this.blueCarrier = player.id
+    }
+    this.emit({ type: 'flag:take', player, flagTeam })
+  })
+
+  this.on('flag:beginContact', ({player, flagTeam}) => {
+    // ignore collision by enemy team
+    if (player.team !== flagTeam) return
+    // ignore collision if player is not carrying a flag
+    if (this.blueCarrier !== player.id && this.redCarrier !== player.id) return
+    // looks good, so update simulation and emit
+    if (player.team === 'BLUE') {
+      this.redCarrier = null
+    } else {
+      this.blueCarrier = null
+    }
+    this.emit({ type: 'flag:capture', player, flagTeam })
+  })
+
+
+  // Check for bomb<->player collision
+  //
+  // Emits bomb:hitPlayer
+  this.world.on('beginContact', ({bodyA, bodyB}) => {
+    let bomb
+    let victim
+    let shooter
+    if (bodyA.isBomb && bodyB.isPlayer) {
+      bomb = this.getBomb(bodyA.id)
+      victim = this.getPlayer(bodyB.id)
+    } else if (bodyA.isPlayer && bodyB.isBomb) {
+      bomb = this.getBomb(bodyB.id)
+      victim = this.getPlayer(bodyA.id)
+    } else {
+      // No collision, so bail
+      return
+    }
+    // ignore if victim cannot be found
+    // FIXME: why can this happen
+    if (!victim) {
+      return
+    }
+    // ignore our own bombs
+    // TODO: is this needed now that collision mask consider team colors?
+    if (bomb.userId === victim.id) {
+      return
+    }
+    // now let's try to load the shooter
+    shooter = this.getPlayer(bomb.userId)
+    // FIXME: why can this happen
+    if (!shooter) {
+      return
+    }
+    // Ignore friendly-fire
+    // TODO: is this needed now that collision mask consider team colors?
+    if (victim.team === shooter.team) {
+      return
+    }
+    // Okay, it was a legit hit on an enemy
+    // Remove the bomb from the simulation and emit
+    // And broadcast :bombHit to everyone
+    this.removeBomb(bomb.id)
+    this.emit({ type: 'bomb:hitPlayer', bomb, shooter, victim })
+  })
+
+
+  // Check for and handle bomb<->wall collision
+  //
+  // Emits bomb:hitWall {bomb}
+  this.world.on('beginContact', ({bodyA, bodyB}) => {
+    let bomb
+    let wallBody  // p2.Body
+    if (bodyA.isWall && bodyB.isBomb) {
+      bomb = this.getBomb(bodyB.id)
+      wallBody = bodyA
+    } else if (bodyA.isBomb && bodyB.isWall) {
+      bomb = this.getBomb(bodyA.id)
+      wallBody = bodyB
+    } else {
+      // not a collision we care about
+      return
+    }
+    this.removeBomb(bomb.id)
+    this.emit({ type: 'bomb:hitWall', bomb, wallBody })
+  })
 }
