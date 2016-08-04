@@ -2,7 +2,8 @@
   "scripts": {
     "start": "webpack-dev-server --hot --inline --content-base static",
     "build": "rimraf dist && webpack",
-    "deploy": "git checkout production && git merge --no-edit master && npm run build && git add dist && git commit -m 'Build' && git push heroku production:master && git checkout master"
+    "deploy": "git checkout production && git merge --no-edit master && npm run build && git add dist && git commit -m 'Build' && git push heroku production:master && git checkout master",
+    "deploy-force": "git checkout production && git merge --no-edit master && npm run build && git add dist && git commit -m 'Build' && git push --force heroku production:master && git checkout master"
   },
   "dependencies": {
     "faker": "^3.1.0",
