@@ -146,7 +146,7 @@ socket.on(':bombShot', ({id, userId, position, velocity}) => {
 socket.on(':bombHit', ({bomb, victim}) => {
   console.log('[recv :bombHit] bomb=', bomb, 'victim=', victim)
   state.simulation.removeBomb(bomb.id)
-  detonateBombFx(bomb)
+  detonateBombFx(bomb.id, bomb.position[0], bomb.position[1])
   // Since bombs insta-gib players, create ship explosion here
   state.killedPlayers.push(state.simulation.getPlayer(victim.id))
 })
@@ -377,6 +377,7 @@ function startClientStuff () {
 
 
   state.simulation.world.on('beginContact', ({bodyA, bodyB}) => {
+    return // skip for now
     if ((bodyA.isDiode || bodyB.isDiode) && (bodyA.isBomb || bodyB.isBomb)) {
       // these are actual their bodies
       let diode
@@ -414,13 +415,15 @@ function startClientStuff () {
 
   // HANDLE BOMB<->WALL CONTACT
 
+  // state.simulation.on('bomb:hitPlayer', ({bomb, victim, shooter}) => {
+  // })
 
   state.simulation.on('bomb:hitWall', ({bomb, wallBody}) => {
-    console.log('bomb:hitWall')
-    // we set bombBody.passDiode = diodeBody.id upstream so we
-    // know to skip this check. FIXME
-    //if (wallBody.isDiode && bomb.body.passDiode === wallBody.id) return
-    detonateBombFx(bomb.body)
+    console.log('bomb:hitWall. bomb:', bomb && bomb.id)
+    if (bomb) {
+      detonateBombFx(bomb.id, bomb.body.position[0], bomb.body.position[1])
+      state.simulation.removeBomb(bomb.id)
+    }
   })
 
 
@@ -523,8 +526,8 @@ function startClientStuff () {
 
 
 
-function detonateBombFx (body) {
-  state.detonatedBombs.push([body.id, ...Array.from(body.position)])
-  state.spritesToRemove.push(body.id)
+function detonateBombFx (id, x, y) {
+  state.detonatedBombs.push([id, x, y])
+  state.spritesToRemove.push(id)
   sounds.bombExplode.play()
 }

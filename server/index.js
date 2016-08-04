@@ -178,6 +178,10 @@ state.simulation.on('bomb:hitPlayer', ({bomb, victim, shooter}) => {
   // so we can overload :bombHit.
 })
 
+state.simulation.on('bomb:hitWall', ({bomb, wallBody}) => {
+  state.simulation.removeBomb(bomb.id)
+})
+
 
 // EMIT SIMULATION EVENTS TO CLIENTS
 

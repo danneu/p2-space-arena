@@ -572,7 +572,7 @@ function attachEvents () {
     // Okay, it was a legit hit on an enemy
     // Remove the bomb from the simulation and emit
     // And broadcast :bombHit to everyone
-    this.removeBomb(bomb.id)
+    //this.removeBomb(bomb.id)
     this.emit({ type: 'bomb:hitPlayer', bomb, shooter, victim })
   })
 
@@ -593,7 +593,7 @@ function attachEvents () {
       // not a collision we care about
       return
     }
-    this.removeBomb(bomb.id)
+    //this.removeBomb(bomb.id)
     this.emit({ type: 'bomb:hitWall', bomb, wallBody })
   })
 }
