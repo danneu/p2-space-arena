@@ -179,7 +179,7 @@ state.simulation.on('bomb:hitPlayer', ({bomb, victim, shooter}) => {
 })
 
 state.simulation.on('bomb:hitWall', ({bomb, wallBody}) => {
-  state.simulation.removeBomb(bomb.id)
+  if (bomb) state.simulation.removeBomb(bomb.id)
 })
 
 
