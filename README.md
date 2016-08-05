@@ -6,7 +6,9 @@
 Another naive iteration of my quest to build a multiplayer 2D spaceship arena
 websocket game.
 
-![screenshot](https://dl.dropboxusercontent.com/spa/quq37nq1583x0lf/rt1_yjv8.png)
+![screenshot](https://dl.dropboxusercontent.com/spa/quq37nq1583x0lf/2s7b77gg.png)
+
+Quick .webm video demo: <https://fat.gfycat.com/FrightenedFriendlyFieldmouse.webm>
 
 ## Run Locally
 
@@ -24,17 +26,19 @@ Visit <http://localhost:8080>.
    and TCP replay on top of that. Built with JS + Pixi.
 2. [danneu/elm-space-arena](https://github.com/danneu/elm-space-arena)
    ([live singleplayer demo](https://www.danneu.com/elm-space-arena/) -- warning: loud):
-   I wrote this one with Elm +[elm-graphics][elm-graphics], but the naive
+   I wrote this one with Elm + [elm-graphics][elm-graphics], but the naive
    solution almost maxed out a core on a small viewport. I replaced elm-graphics
    with a port that sends game snapshots to Pixi and got some performance back,
    but ultimately I decided that I don't want Elm in my hot loop.
+
+This repo is the third and best iteration so far, but it won't be the last.
 
 [elm-graphics]: http://package.elm-lang.org/packages/evancz/elm-graphics/1.0.0/Collage
 
 ## Approach
 
 In my previous two experiments, I rolled the physics myself from scratch,
-like the vector math. Not something I'm terribly good.
+like the vector math. Not something I'm terribly good at.
 
 This time around, I decided to wrap my simulation around a Javascript
 physics library that could run on the server and browser.
@@ -76,8 +80,11 @@ not players. This way, clients can trace bombs locally
 until they hit a wall or until they receive a `BOMB_HIT`
 from the server.
 
-## Hangups
+## Lessons Learned
 
-- p2's (0, 0) origin is on the bottom-left and increases up and
-  to the right. Pixi's origin is on the top-left and increases
-  down and to the right. It's painful having to flip the `y`.
+- The broadphase becomes too expensive representing each map tile as its own
+  p2.Body. The narrowphase becomes too expensive representing the whole map
+  as a few large convex shapes. The former is still much more performant than
+  the latter. It seems that the best solution for p2 is to consolidate
+  adjacent polygons into convex bodies without going overboard.
+  [Read more](http://www.html5gamedevs.com/topic/24183-ideal-way-to-reduce-a-2d-tile-level-into-fewer-p2bodies/)
