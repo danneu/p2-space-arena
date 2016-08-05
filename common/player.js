@@ -32,18 +32,20 @@ function Player (id, team, position, angle) {
   // The player's clamped angle in degrees. Use this for game logic,
   // like when calculating the trajectory of the bomb they're shooting.
   this.deg = util.rad2deg(angle || 0)
-  this.body = (function() {
+  const otherTeam = util.flipTeam(team)
+  const baseCollisionMask = Group.Flag.ANY
+                          | Group.WALL | Group.DIODE
+                          | Group.Bomb[otherTeam]
+                          | Group.Filter[otherTeam]
+  this.body = (() => {
     const body = new p2.Body({ id, mass: 1, position })
     body.isPlayer = true
     // TODO: graphic radius is 15, but seems best to make collision
     // radius a lil smaller for wall collisions, but not bomb collisions.
     const shape = new p2.Circle({ radius: pxm(15) })
-    const otherTeam = util.flipTeam(team)
     shape.collisionGroup = Group.Player[team]
-    shape.collisionMask = Group.Flag.ANY
-                        | Group.WALL | Group.DIODE
-                        | Group.Bomb[otherTeam]
-                        | Group.Filter[otherTeam]
+    shape._baseCollisionMask = baseCollisionMask
+    shape.collisionMask = baseCollisionMask
     shape.material = Material.ship
     body.addShape(shape)
     body.angle = angle || 0
@@ -104,4 +106,10 @@ Player.prototype.rechargeEnergy = function (deltaTime) {
     this.maxEnergy,
     Math.round(this.curEnergy + this.energyPerSecond * deltaTime)
   )
+}
+
+
+// Run this after velocity change to allow diode collisions
+Player.prototype.updateCollisionMask = function () {
+  this.body.shapes[0].collisionMask = this.body.shapes[0]._baseCollisionMask | Group.velocityToDiodeMask(this.body.velocity)
 }

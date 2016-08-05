@@ -356,8 +356,10 @@ function startClientStuff () {
       if (kind === 'keydown') {
         if (key === 'up') {
           Physics.thrust(player.thrust, player.body)
+          player.updateCollisionMask()
         } else if (key === 'down') {
           Physics.thrust(-player.thrust, player.body)
+          player.updateCollisionMask()
         }
         if (key === 'left') {
           Physics.rotateLeft(player.turnSpeed, player.body)
@@ -373,43 +375,6 @@ function startClientStuff () {
 
     // Ensure user isn't going too fast
     player.enforceMaxSpeed()
-  })
-
-
-  state.simulation.world.on('beginContact', ({bodyA, bodyB}) => {
-    return // skip for now
-    if ((bodyA.isDiode || bodyB.isDiode) && (bodyA.isBomb || bodyB.isBomb)) {
-      // these are actual their bodies
-      let diode
-      let bomb
-      if (bodyA.isDiode) {
-        diode = bodyA
-        bomb = bodyB
-      } else {
-        bomb = bodyA
-        diode = bodyB
-      }
-      let collides
-      switch (diode.isDiode) {
-        case 'UP':
-          collides = bomb.velocity[1] < 0
-          break
-        case 'DOWN':
-          collides = bomb.velocity[1] > 0
-          break
-        case 'LEFT':
-          collides = bomb.velocity[0] > 0
-          break
-        case 'RIGHT':
-          collides = bomb.velocity[0] < 0
-          break
-      }
-      if (collides) {
-        detonateBombFx(bomb)
-      } else {
-        bomb.passDiode = diode.id
-      }
-    }
   })
 
 

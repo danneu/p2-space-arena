@@ -69,6 +69,7 @@ function makeFilter (team, tilesize, x, y) {
 }
 
 
+// direction is 'UP' | 'DOWN' | 'LEFT' | 'RIGHT'
 function makeDiode (tilesize, direction, x, y) {
   const body = new p2.Body()
   body.isWall = true
@@ -77,7 +78,7 @@ function makeDiode (tilesize, direction, x, y) {
   body.tilesize = tilesize
   const shape = new p2.Box({ width: tilesize, height: tilesize })
   //shape.material = Material.wall
-  shape.collisionGroup = Group.DIODE
+  shape.collisionGroup = Group.Diode[direction]
   // FIXME: Diodes should also work for players not just bombs.
   // Couldn't get it working within a couple hours though, so just
   // bombs for now.
