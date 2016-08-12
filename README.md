@@ -3,8 +3,8 @@
 
 - Live Multiplayer Demo: http://p2-space-arena.herokuapp.com/
 
-Another naive iteration of my quest to build a multiplayer 2D spaceship arena
-websocket game.
+Another naive iteration of my quest to build a multiplayer 2D spaceship CTF 
+arena websocket game.
 
 ![screenshot](https://dl.dropboxusercontent.com/spa/quq37nq1583x0lf/2s7b77gg.png)
 
@@ -34,6 +34,59 @@ Visit <http://localhost:8080>.
 This repo is the third and best iteration so far, but it won't be the last.
 
 [elm-graphics]: http://package.elm-lang.org/packages/evancz/elm-graphics/1.0.0/Collage
+
+## Tilemap
+
+Here's the current map:
+
+```
+.............XXXXXXXXX.............
+........XXXXX.........XXXXX........
+.......X....→.........←....X.......
+......X.....→...XXX...←.....X......
+.....X...........X...........X.....
+.....X.......................X.....
+.....X....X......X......X....X.....
+.....X....XXX....X....XXX....X.....
+.....X....X.............X....X.....
+......X.......XX...XX.......X......
+......X.........X.X.........X......
+.......X.........X.........X.......
+..XXXXXXXX.......X.......XXXXXXXX..
+.X>>>>>>>>.......X.......<<<<<<<<X.
+X>..............X.X..............<X
+X>.............X...X.............<X
+X>.....X.....XXX...XXX.....X.....<X
+X>.....X(((XX...X.X...XX)))X.....<X
+X>.....X.........X.........X.....<X
+X>.....X.........X.........X.....<X
+.X.........X..r..X..b..X.........X.
+..X..............X..............X..
+...X.......X.....X.....X.......X...
+....XXXXXXXXX...XXX...XXXXXXXXX....
+.............XXX...XXX.............
+```
+
+| Tile | Image | ASCII | Description |
+| ---- | ----- | ----- | ----------- |
+| Empty  | -- | `.` | Empty space that all entities can fly through. |
+| Block  | ![block][block] | `X` | Entities collide at 90°. |
+| Slope `TODO`  | -- | `◢`, `◣`, `◤`, `◥` | Entities collide at 45°. I implemented them on [map2.txt][map2] but removed them for now due to unrelated performance regression when shrinking tiles from 32px to 16px in the same commit. |
+| Filter | ![redfilter][redfilter], ![bluefilter][bluefilter] | red=`(`, blue=`)` | Players/bombs may pass through if they are on the team indicated by the filter's color. |
+| Diode  | ![leftdiode][leftdiode], ![rightdiode][rightdiode], ... | `←`, `→`, `↑`, `↓` | Players/bombs may pass through if there are moving in the same direction as the diode's arrows. |
+| Flag   | ![redflag][redflag], ![blueflag][blueflag] | red=`r`, blue=`b` | Players pick up the opposite team's flag and score by colliding with their own flag. Teams can have more than flag in the game. |
+| Spawn  | -- | red=`>`, blue=`<`  | Players spawn at a random spawn tile. If team has no spawn tile, they spawn randomly on their side of the map for now (red = left, blue = right). |
+
+The next step for the tilemap system is to address this performance issue: https://github.com/danneu/p2-space-arena/issues/13
+
+[block]: https://raw.githubusercontent.com/danneu/p2-space-arena/master/static/img/tile2.png
+[redfilter]: https://dl.dropboxusercontent.com/spa/quq37nq1583x0lf/aqd4ndiq.png
+[bluefilter]: https://dl.dropboxusercontent.com/spa/quq37nq1583x0lf/3xk_kg16.png
+[rightdiode]: https://dl.dropboxusercontent.com/spa/quq37nq1583x0lf/3jqedtmd.png
+[leftdiode]: https://dl.dropboxusercontent.com/spa/quq37nq1583x0lf/co669o1k.png
+[redflag]: https://dl.dropboxusercontent.com/spa/quq37nq1583x0lf/hs42su7n.png
+[blueflag]: https://dl.dropboxusercontent.com/spa/quq37nq1583x0lf/s0e9-n0e.png
+[map2]: https://github.com/danneu/p2-space-arena/blob/master/map2.txt
 
 ## Approach
 
@@ -84,7 +137,7 @@ from the server.
 
 - The broadphase becomes too expensive representing each map tile as its own
   p2.Body. The narrowphase becomes too expensive representing the whole map
-  as a few large convex shapes. The former is still much more performant than
+  as a few large concave shapes. The former is still much more performant than
   the latter. It seems that the best solution for p2 is to consolidate
   adjacent polygons into convex bodies without going overboard.
   [Read more](http://www.html5gamedevs.com/topic/24183-ideal-way-to-reduce-a-2d-tile-level-into-fewer-p2bodies/)
